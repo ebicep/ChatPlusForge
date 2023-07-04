@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "ChatPlus.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "MixinChatManager",
+    "MixinMinecraftManager"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
