@@ -7,10 +7,11 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.OptionsList
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.controls.KeyBindsScreen
 import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
 
-class ConfigGui(private val lastScreen: Screen?) : Screen(Component.literal("ChatPlus Config")) {
+class ConfigGui(private val lastScreen: Screen?) : Screen(Component.translatable("chatPlus.title")) {
 
     companion object {
         val enabled: OptionInstance<Boolean> = OptionInstance.createBoolean("Enabled", Config.enabled.get()) {
@@ -77,16 +78,22 @@ class ConfigGui(private val lastScreen: Screen?) : Screen(Component.literal("Cha
             arrayOf(
                 enabled,
                 scale,
-                maxMessages
+                maxMessages,
             )
         )
         this.addWidget(this.list!!)
-
+        this.addRenderableWidget(
+            Button.builder(Component.translatable("controls.keybinds")) {
+                val keyBindsScreen = KeyBindsScreen(this, minecraft!!.options)
+                minecraft!!.setScreen(keyBindsScreen)
+                keyBindsScreen.keyBindsList.scrollAmount = keyBindsScreen.keyBindsList.maxScroll.toDouble() + 1
+            }.bounds(this.width / 2 - 155, this.height - 29, 150, 20).build()
+        )
         this.addRenderableWidget(
             Button.builder(CommonComponents.GUI_DONE) {
                 minecraft!!.options.save()
                 minecraft!!.setScreen(lastScreen)
-            }.bounds(width / 2 - 100, height - 27, 200, 20).build()
+            }.bounds(this.width / 2 - 155 + 160, this.height - 29, 150, 20).build()
         )
     }
 

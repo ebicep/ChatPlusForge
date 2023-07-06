@@ -10,9 +10,9 @@ import org.lwjgl.glfw.GLFW
 
 object ChatPlusKeyBindings {
 
-    val NO_SCOLL: ChatPlusKeyMapping = ChatPlusKeyMapping("No Scroll", GLFW.GLFW_KEY_LEFT_CONTROL)
-    val FINE_SCROLL: ChatPlusKeyMapping = ChatPlusKeyMapping("Fine Scroll", GLFW.GLFW_KEY_LEFT_SHIFT)
-    val LARGE_SCROLL: ChatPlusKeyMapping = ChatPlusKeyMapping("Large Scroll", GLFW.GLFW_KEY_LEFT_ALT)
+    val NO_SCOLL: ChatPlusKeyMapping = ChatPlusKeyMapping("key.noScoll", GLFW.GLFW_KEY_LEFT_CONTROL)
+    val FINE_SCROLL: ChatPlusKeyMapping = ChatPlusKeyMapping("key.fineScroll", GLFW.GLFW_KEY_LEFT_SHIFT)
+    val LARGE_SCROLL: ChatPlusKeyMapping = ChatPlusKeyMapping("key.largeScroll", GLFW.GLFW_KEY_LEFT_ALT)
     val KEY_BINDINGS = arrayOf(NO_SCOLL, FINE_SCROLL, LARGE_SCROLL)
 
     class ChatPlusKeyMapping(name: String, keyCode: Int) :
