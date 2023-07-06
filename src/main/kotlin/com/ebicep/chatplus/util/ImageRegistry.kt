@@ -5,6 +5,10 @@ import net.minecraft.resources.ResourceLocation
 
 enum class ImageRegistry(path: String) {
 
+    UPDOWN("/updown.png"),
+    LEFTRIGHT("/leftright.png"),
+    MOVE("/move.png"),
+
     ;
 
     private var resourceLocation: ResourceLocation? = null

@@ -1,6 +1,7 @@
 package com.ebicep.chatplus.hud
 
-import config.Config
+import com.ebicep.chatplus.config.ConfigGui
+import com.ebicep.chatplus.hud.ChatRenderer.padding
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
 import net.minecraft.client.Minecraft
@@ -19,7 +20,7 @@ object ChatManager {
     val messages: MutableList<GuiMessage> = ArrayList()
     val displayedMessages: MutableList<GuiMessage.Line> = ArrayList()
     var chatScrollbarPos: Int = 0
-    var newMessageSinceScroll = false
+    var updateChat = false
 
     fun addMessage(
         pChatComponent: Component,
@@ -32,23 +33,25 @@ object ChatManager {
         if (pTag?.icon() != null) {
             i -= pTag.icon()!!.width + 4 + 2
         }
+//        ChatPlus.LOGGER.info("i: $i")
+//        ChatPlus.LOGGER.info("pChatComponent: ${pChatComponent.contents}")
         val list = ComponentRenderUtils.wrapComponents(pChatComponent, i, Minecraft.getInstance().font)
         val flag = isChatFocused()
         for (j in list.indices) {
             val formattedCharSequence = list[j]
             if (flag && chatScrollbarPos > 0) {
-                newMessageSinceScroll = true
+                updateChat = true
                 scrollChat(1)
             }
             val flag1 = j == list.size - 1
             this.displayedMessages.add(0, GuiMessage.Line(pAddedTime, formattedCharSequence, pTag, flag1))
         }
-        while (this.displayedMessages.size > 100) {
+        while (this.displayedMessages.size > 2000) {
             this.displayedMessages.removeAt(this.displayedMessages.size - 1)
         }
         if (!pOnlyTrim) {
             this.messages.add(0, GuiMessage(pAddedTime, pChatComponent, pHeaderSignature, pTag))
-            while (this.messages.size > 100) {
+            while (this.messages.size > ConfigGui.maxMessages.get()) {
                 this.messages.removeAt(this.messages.size - 1)
             }
         }
@@ -187,7 +190,7 @@ object ChatManager {
 
     fun resetChatScroll() {
         chatScrollbarPos = 0
-        this.newMessageSinceScroll = false
+        this.updateChat = false
     }
 
     fun scrollChat(pPosInc: Int) {
@@ -198,7 +201,20 @@ object ChatManager {
         }
         if (chatScrollbarPos <= 0) {
             chatScrollbarPos = 0
-            this.newMessageSinceScroll = false
+            this.updateChat = false
+        }
+    }
+
+    fun rescaleChat() {
+        resetChatScroll()
+        refreshTrimmedMessage()
+    }
+
+    private fun refreshTrimmedMessage() {
+        this.displayedMessages.clear()
+        for (i in this.messages.indices.reversed()) {
+            val guiMessage: GuiMessage = this.messages[i]
+            addMessage(guiMessage.content(), guiMessage.signature(), guiMessage.addedTime(), guiMessage.tag(), true)
         }
     }
 
@@ -207,28 +223,38 @@ object ChatManager {
     }
 
     fun getScale(): Float {
-        return Config.scale
+        return ConfigGui.scale.get().toFloat()
     }
 
     fun getWidth(): Int {
-        return getWidth(Config.widthPercent)
-    }
-
-    fun getWidth(widthPercent: Float): Int {
-        return Mth.floor(Minecraft.getInstance().window.guiScaledWidth * widthPercent) / 2
+        return ConfigGui.chatWidth
     }
 
     fun getHeight(): Int {
         return if (isChatFocused()) {
-            getHeight(Config.focusedHeightPercent)
+            getHeight(0f) //TODO
         } else {
-            getHeight(Config.unfocusedHeightPercent)
+            getHeight(0f)
         }
     }
 
     fun getHeight(heightPercent: Float): Int {
-        return Mth.floor(Minecraft.getInstance().window.guiScaledHeight * heightPercent) / 2// / 20
+        return ConfigGui.chatHeight
+        //return Mth.floor(Minecraft.getInstance().window.guiScaledHeight * (heightPercent - .1))
     }
+
+    fun getX(): Int {
+        return Mth.clamp(ConfigGui.x, padding, Minecraft.getInstance().window.guiScaledWidth - 50)
+    }
+
+    fun getY(): Int {
+        var y = ConfigGui.y
+        if (y < 0) {
+            y += Minecraft.getInstance().window.guiScaledHeight
+        }
+        return Mth.clamp(y, 30, Minecraft.getInstance().window.guiScaledHeight - 30)
+    }
+
 
     fun getLinesPerPage(): Int {
         return getHeight() / getLineHeight()

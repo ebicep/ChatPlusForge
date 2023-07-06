@@ -42,7 +42,7 @@ println(
 minecraft {
     mappings("parchment", "2023.06.26-1.20.1")
 
-    //accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
+    accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
 
     runs.all {
         mods {
@@ -92,7 +92,6 @@ dependencies {
     minecraft("net.minecraftforge:forge:1.20-46.0.1")
     annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
     implementation("thedarkcolour:kotlinforforge:4.3.0")
-    implementation("gg.essential:vigilance-1.18.1-forge:284")
 }
 
 val Project.mixin: org.spongepowered.asm.gradle.plugins.MixinExtension

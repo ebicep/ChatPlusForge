@@ -1,5 +1,7 @@
 package com.ebicep.chatplus.hud
 
+import com.ebicep.chatplus.config.ChatPlusKeyBindings
+import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.CommandSuggestions
@@ -79,27 +81,28 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             true
         } else if (super.keyPressed(pKeyCode, pScanCode, pModifiers)) {
             true
-        } else if (pKeyCode == 256) {
+        } else if (pKeyCode == 256) { // escape
             minecraft!!.setScreen(null as Screen?)
             true
-        } else if (pKeyCode != 257 && pKeyCode != 335) {
+        } else if (pKeyCode != 257 && pKeyCode != 335) { // enter
             when (pKeyCode) {
-                265 -> {
+                // cycle through own sent messages
+                265 -> { // up arrow
                     moveInHistory(-1)
                     true
                 }
 
-                264 -> {
+                264 -> { // down arrow
                     moveInHistory(1)
                     true
                 }
-
-                266 -> {
+                // cycle through displayed chat messages
+                266 -> { // page up
                     ChatManager.scrollChat(ChatManager.getLinesPerPage() - 1)
                     true
                 }
 
-                267 -> {
+                267 -> { // page down
                     ChatManager.scrollChat(-ChatManager.getLinesPerPage() + 1)
                     true
                 }
@@ -121,7 +124,16 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         return if (commandSuggestions!!.mouseScrolled(delta)) {
             true
         } else {
-            if (!hasShiftDown()) {
+            // control = no scroll
+            // shift = fine scroll
+            // alt = triple scroll
+            val window = Minecraft.getInstance().window.window
+            if (InputConstants.isKeyDown(window, ChatPlusKeyBindings.NO_SCOLL.key.value)) {
+                return true
+            }
+            if (InputConstants.isKeyDown(window, ChatPlusKeyBindings.LARGE_SCROLL.key.value)) {
+                delta *= 21.0
+            } else if (!InputConstants.isKeyDown(window, ChatPlusKeyBindings.FINE_SCROLL.key.value)) {
                 delta *= 7.0
             }
             ChatManager.scrollChat(delta.toInt())
@@ -178,20 +190,31 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         }
     }
 
-    override fun render(pGuiGraphics: GuiGraphics, pMouseX: Int, pMouseY: Int, pPartialTick: Float) {
-        pGuiGraphics.fill(2, height - 14, width - 2, height - 2, minecraft!!.options.getBackgroundColor(Int.MIN_VALUE))
-        input!!.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick)
-        super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick)
-        commandSuggestions!!.render(pGuiGraphics, pMouseX, pMouseY)
+    override fun render(guiGraphics: GuiGraphics, pMouseX: Int, pMouseY: Int, pPartialTick: Float) {
+        // input box
+        guiGraphics.fill(0, height - 14, width, height, minecraft!!.options.getBackgroundColor(Int.MIN_VALUE))
+        guiGraphics.pose().pushPose()
+        guiGraphics.pose().translate(-2.0, 2.0, 0.0)
+        input!!.render(guiGraphics, pMouseX, pMouseY, pPartialTick)
+        guiGraphics.pose().popPose()
+
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick)
+
+        // brigadier
+        commandSuggestions!!.render(guiGraphics, pMouseX, pMouseY)
+
+        // hoverables
         val guiMessageTag = ChatManager.getMessageTagAt(pMouseX.toDouble(), pMouseY.toDouble())
         if (guiMessageTag?.text() != null) {
-            pGuiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
+            guiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
         } else {
             val style = getComponentStyleAt(pMouseX.toDouble(), pMouseY.toDouble())
             if (style != null && style.hoverEvent != null) {
-                pGuiGraphics.renderComponentHoverEffect(font, style, pMouseX, pMouseY)
+                guiGraphics.renderComponentHoverEffect(font, style, pMouseX, pMouseY)
             }
         }
+
+
     }
 
     override fun isPauseScreen(): Boolean {
@@ -211,8 +234,8 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         }
     }
 
-    private fun getComponentStyleAt(p_232702_: Double, p_232703_: Double): Style? {
-        return ChatManager.getClickedComponentStyleAt(p_232702_, p_232703_)
+    private fun getComponentStyleAt(pMouseX: Double, pMouseY: Double): Style? {
+        return ChatManager.getClickedComponentStyleAt(pMouseX, pMouseY)
     }
 
     fun handleChatInput(pInput: String, pAddToRecentChat: Boolean): Boolean {

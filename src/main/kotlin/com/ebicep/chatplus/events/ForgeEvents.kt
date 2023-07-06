@@ -1,8 +1,12 @@
 package com.ebicep.chatplus.events
 
 import com.ebicep.chatplus.MODID
+import com.ebicep.chatplus.config.Config
+import com.ebicep.chatplus.config.ConfigGui
 import com.ebicep.chatplus.hud.ChatPlusScreen
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraftforge.client.event.ClientChatEvent
 import net.minecraftforge.client.event.RenderGuiOverlayEvent
 import net.minecraftforge.client.event.ScreenEvent
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay
@@ -28,5 +32,26 @@ object ForgeEvents {
             event.newScreen = ChatPlusScreen(latestDefaultText)
         }
     }
+
+    @SubscribeEvent
+    fun onChat(event: ClientChatEvent) {
+        val message = event.message
+        when (message) {
+            "OPEN" -> {
+                Minecraft.getInstance().setScreen(ConfigGui(null))
+                event.isCanceled = true
+            }
+
+            "SAVE" -> {
+                Config.GENERAL_SPEC.save()
+                event.isCanceled = true
+            }
+        }
+    }
+
+//    @SubscribeEvent
+//    fun onConfigReload(event : ModConfigEvent.Reloading) {
+//        ChatPlus.LOGGER.info("Reloading config...")
+//    }
 
 }

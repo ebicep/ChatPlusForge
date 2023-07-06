@@ -1,74 +1,44 @@
-package config
+package com.ebicep.chatplus.config
 
-import gg.essential.vigilance.Vigilant
-import gg.essential.vigilance.data.Property
-import gg.essential.vigilance.data.PropertyType
-import java.io.File
+import com.ebicep.chatplus.ChatPlus
+import net.minecraftforge.common.ForgeConfigSpec
+import kotlin.concurrent.fixedRateTimer
 
-/**
- *
- * @see <a href="https://github.com/EssentialGG/Vigilance/blob/master/src/main/kotlin/gg/essential/vigilance/example/ExampleConfig.kt">Example</a>
- */
-object Config : Vigilant(File("./config/ChatPlus.toml")) {
-    @Property(
-        type = PropertyType.PERCENT_SLIDER,
-        name = "Focused Height",
-        description = "",
-        category = "Test",
-    )
-    var focusedHeightPercent = 1f // % of height
+object Config {
 
-    @Property(
-        type = PropertyType.PERCENT_SLIDER,
-        name = "Unfocused Height",
-        description = "",
-        category = "Test",
-    )
-    var unfocusedHeightPercent = 1f // % of height
+    val GENERAL_SPEC: ForgeConfigSpec
+    lateinit var enabled: ForgeConfigSpec.BooleanValue
+    lateinit var x: ForgeConfigSpec.ConfigValue<Int>
+    lateinit var y: ForgeConfigSpec.ConfigValue<Int>
+    lateinit var height: ForgeConfigSpec.ConfigValue<Int>
+    lateinit var width: ForgeConfigSpec.ConfigValue<Int>
+    lateinit var scale: ForgeConfigSpec.ConfigValue<Double>
+    const val minMaxMessages = 1000
+    const val maxMaxMessages = 10_000_000
+    lateinit var maxMessages: ForgeConfigSpec.IntValue
 
-    @Property(
-        type = PropertyType.PERCENT_SLIDER,
-        name = "Width",
-        description = "",
-        category = "Test",
-    )
-    var widthPercent = 1f // % of width
-
-    @Property(
-        type = PropertyType.PERCENT_SLIDER,
-        name = "Scale",
-        description = "",
-        category = "Test",
-    )
-    var scale = 1f
+    // values that need to be updated, runs every 10 seconds to prevent spam saving
+    val delayedUpdates: HashMap<Any, () -> Unit> = HashMap()
 
     init {
-        initialize()
-
-        val clazz = javaClass
-//        registerListener(clazz.getDeclaredField("colorWithAlpha")) { color: Color ->
-//            UChat.chat("colorWithAlpha listener activated! New color: $color")
-//        }
-
-//        addDependency(clazz.getDeclaredField("dependant"), clazz.getDeclaredField("dependency"))
-//        addDependency(clazz.getDeclaredField("propertyPete"), clazz.getDeclaredField("toggleTom"))
-//        addDependency(clazz.getDeclaredField("checkboxChuck"), clazz.getDeclaredField("toggleTom"))
-//        addDependency("valueDependant", "selectorDependency") { value: Int -> value == 0 }
-//        addDependency("inverted", "dependency") { value: Boolean -> !value }
-//        setCategoryDescription(
-//            "Property Overview",
-//            "This category is a quick overview of all of the components. For a deep-dive into the component, check their specific subcategories."
-//        )
-//
-//        setCategoryDescription(
-//            "Property Deep-Dive",
-//            "This category will go in depth into every component, and show off some of the customization options available in Vigilance. It contains a subcategory for every single property type available."
-//        )
-//
-//        setSubcategoryDescription(
-//            "Property Deep-Dive",
-//            "Buttons",
-//            "Buttons are a great way for the user to run an action. Buttons don't have any associated state, and as such their annotation target has to be a method."
-//        )
+        val builder = ForgeConfigSpec.Builder()
+        setupConfig(builder)
+        GENERAL_SPEC = builder.build()
+        ChatPlus.LOGGER.info("Initialized config.")
+        fixedRateTimer(period = 10 * 1000) {
+            delayedUpdates.forEach { it.value() }
+            delayedUpdates.clear()
+        }
     }
+
+    private fun setupConfig(builder: ForgeConfigSpec.Builder) {
+        enabled = builder.define("enabled", true)
+        x = builder.define("x", 0)
+        y = builder.define("y", -30)
+        height = builder.define("height", 180)
+        width = builder.define("width", 320)
+        scale = builder.define("scale", 1.0)
+        maxMessages = builder.defineInRange("maxMessages", minMaxMessages, minMaxMessages, maxMaxMessages)
+    }
+
 }
