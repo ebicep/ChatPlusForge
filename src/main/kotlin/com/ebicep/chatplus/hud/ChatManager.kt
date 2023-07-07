@@ -3,6 +3,7 @@ package com.ebicep.chatplus.hud
 import com.ebicep.chatplus.config.ConfigGui
 import net.minecraft.client.Minecraft
 import net.minecraft.util.Mth
+import kotlin.math.roundToInt
 
 object ChatManager {
 
@@ -62,32 +63,49 @@ object ChatManager {
     }
 
     fun getWidth(): Int {
+        val guiScaledWidth = Minecraft.getInstance().window.guiScaledWidth
+        if (ConfigGui.chatWidth < 0) {
+            ConfigGui.chatWidth = 200
+        } else if (getX() + ConfigGui.chatWidth / getScale() > guiScaledWidth) {
+            ConfigGui.chatWidth = (Mth.clamp(
+                (ConfigGui.chatWidth / getScale()).toInt(),
+                getX() + 160,
+                guiScaledWidth
+            ) * getScale()).roundToInt() - 1
+        }
         return ConfigGui.chatWidth
     }
 
-    fun getHeight(): Int {
-        return if (isChatFocused()) {
-            getHeight(0f) //TODO
-        } else {
-            getHeight(0f)
-        }
+    fun getBackgroundWidth(): Int {
+        return (getWidth() / getScale()).toInt()
     }
 
-    fun getHeight(heightPercent: Float): Int {
-        return ConfigGui.chatHeight
-        //return Mth.floor(Minecraft.getInstance().window.guiScaledHeight * (heightPercent - .1))
+    fun getHeight(): Int {
+        if (getY() - ConfigGui.chatHeight < 0) {
+            ConfigGui.chatHeight = getY()
+        }
+        return if (isChatFocused()) {
+            return ConfigGui.chatHeight
+        } else {
+            return (ConfigGui.chatHeight * .5).toInt()
+        }
     }
 
     fun getX(): Int {
-        return Mth.clamp(ConfigGui.x, 0, Minecraft.getInstance().window.guiScaledWidth - getWidth())
+        val clamp = Mth.clamp(ConfigGui.x, 0, Minecraft.getInstance().window.guiScaledWidth - (ConfigGui.chatWidth / getScale()).toInt())
+        if (clamp < 0) {
+            ConfigGui.x = 0
+            return 0
+        }
+        return clamp
     }
 
     fun getY(): Int {
-        var y = 300//ConfigGui.y
+        var y = ConfigGui.y
         if (y < 0) {
             y += Minecraft.getInstance().window.guiScaledHeight
         }
-        return Mth.clamp(y, baseYOffset + getHeight(), Minecraft.getInstance().window.guiScaledHeight - baseYOffset)
+        return Mth.clamp(y, ConfigGui.chatHeight, Minecraft.getInstance().window.guiScaledHeight - baseYOffset)
     }
 
 

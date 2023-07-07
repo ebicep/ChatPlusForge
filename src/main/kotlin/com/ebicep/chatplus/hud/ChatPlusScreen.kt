@@ -1,6 +1,7 @@
 package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
+import com.ebicep.chatplus.config.ConfigGui
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
@@ -15,6 +16,7 @@ import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraft.util.StringUtil
 import org.apache.commons.lang3.StringUtils
+import kotlin.math.roundToInt
 
 class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plus_screen.title")) {
 
@@ -146,6 +148,26 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             true
         } else {
             if (pButton == 0) {
+                val side = ChatManager.getX() + ChatManager.getBackgroundWidth()
+                val sideInner = ChatManager.getX() + ChatManager.getBackgroundWidth() - ChatRenderer.renderingMovingSize
+                val roof = ChatManager.getY() - ChatManager.getHeight()
+                val roofInner = ChatManager.getY() - ChatManager.getHeight() + ChatRenderer.renderingMovingSize
+                if (pMouseX > sideInner && pMouseX < side && pMouseY > roof && pMouseY < ChatManager.getY()) {
+                    movingChatX = true
+                }
+                if (pMouseY < roofInner && pMouseY > roof && pMouseX > ChatManager.getX() && pMouseX < side) {
+                    movingChatY = true
+                }
+                if (!movingChatX && !movingChatY) {
+                    if (
+                        pMouseX > ChatManager.getX() && pMouseX < sideInner &&
+                        pMouseY > roofInner && pMouseY < ChatManager.getY()
+                    ) {
+                        movingChatBox = true
+                        xDisplacement = pMouseX - ChatManager.getX()
+                        yDisplacement = pMouseY - ChatManager.getY()
+                    }
+                }
                 ChatManager.handleClickedCategory(pMouseX, pMouseY)
                 if (ChatManager.selectedCategory.handleChatQueueClicked(pMouseX, pMouseY)) {
                     return true
@@ -163,6 +185,99 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             }
         }
     }
+
+    override fun mouseReleased(pMouseX: Double, pMouseY: Double, pButton: Int): Boolean {
+        if (movingChat) {
+            movingChat = false
+            return true
+        }
+        return super.mouseReleased(pMouseX, pMouseY, pButton)
+    }
+
+    override fun mouseDragged(pMouseX: Double, pMouseY: Double, pButton: Int, pDragX: Double, pDragY: Double): Boolean {
+        val window = Minecraft.getInstance().window.window
+        val moving = InputConstants.isKeyDown(window, ChatPlusKeyBindings.MOVE_CHAT.key.value)
+        if (!ChatManager.isChatFocused() || !moving || pButton != 0) {
+            movingChat = false
+            return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
+        }
+        // mouse over roof of chat
+        //ChatPlus.LOGGER.debug("mouseX: $pMouseX, mouseY: $pMouseY, button: $pButton, dragX: $pDragX, dragY: $pDragY")
+        if (
+            pMouseX > Minecraft.getInstance().window.guiScaledWidth || pMouseY > Minecraft.getInstance().window.guiScaledHeight ||
+            pMouseX < 0 || pMouseY < 0
+        ) {
+            //movingChat = false
+            return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
+        }
+
+        if (movingChatX) {
+            val newWidth: Double = Mth.clamp(
+                (pMouseX - ChatManager.getX()) * ChatManager.getScale(),
+                160.0,
+                Minecraft.getInstance().window.guiScaledWidth - ChatManager.getX() - 0.0
+            )
+            val width = newWidth.roundToInt()
+            ConfigGui.chatWidth = width
+        }
+        if (movingChatY) {
+            val newHeight: Double = Mth.clamp(
+                pMouseY,
+                1.0,
+                ChatManager.getY() - 90.0
+            )
+            val height = (ChatManager.getY() - newHeight).roundToInt()
+            if (height > 90) {
+                ConfigGui.chatHeight = height
+            }
+        }
+        if (movingChatBox) {
+            ConfigGui.x = Mth.clamp(
+                (pMouseX - xDisplacement).roundToInt(),
+                0,
+                Minecraft.getInstance().window.guiScaledWidth - ChatManager.getBackgroundWidth() - 1
+            )
+            ConfigGui.y = Mth.clamp(
+                (pMouseY - yDisplacement).roundToInt(),
+                1,
+                Minecraft.getInstance().window.guiScaledHeight - ChatManager.baseYOffset
+            )
+        }
+
+        return true
+    }
+
+//    var currentCursor: ImageRegistry? = null
+//
+//    fun changeCursor(image: ImageRegistry?) {
+//        if (currentCursor == image) {
+//            return
+//        } else {
+//
+//        }
+//    }
+//    companion object {
+//
+//        val cursors: MutableMap<ImageRegistry, Cursor> = mutableMapOf()
+//
+//        init {
+//            cursors.put(null, GLFW.glfwCreateCursor())
+//            val cursorImages = listOf(ImageRegistry.LEFTRIGHT, ImageRegistry.UPDOWN, ImageRegistry.MOVE)
+//            cursorImages.forEach {
+//                Minecraft.getInstance().resourceManager.getResource(it.getResourceLocation()).ifPresent { resource ->
+//                    val image: BufferedImage = ImageIO.read(resource.open())
+//                    val nativeImage = NativeImage(image.width, image.height, true)
+//                    val malloc = GLFWImage.malloc()
+//                    malloc.width(nativeImage.width)
+//                    malloc.height(nativeImage.height)
+//                    MemoryUtil.memPutAddress(malloc.address() + GLFWImage.PIXELS, nativeImage.pixels);
+//                    glfwCursorAddress = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
+//                }
+//            }
+//            GLFW.glfwSetCursor()
+//            GLFW.glfwCreateCursor()
+//        }
+//    }
 
     override fun insertText(pText: String, pOverwrite: Boolean) {
         if (pOverwrite) {
@@ -260,6 +375,21 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
 
     fun normalizeChatMessage(pMessage: String): String {
         return StringUtil.trimChatMessage(StringUtils.normalizeSpace(pMessage.trim { it <= ' ' }))
+    }
+
+    companion object {
+        var movingChat: Boolean
+            get() = movingChatX || movingChatY || movingChatBox
+            set(value) {
+                movingChatX = value
+                movingChatY = value
+                movingChatBox = value
+            }
+        var movingChatX = false
+        var movingChatY = false
+        var movingChatBox = false
+        var xDisplacement = 0.0
+        var yDisplacement = 0.0
     }
 
 

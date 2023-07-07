@@ -1,7 +1,8 @@
 {
-  "key.noScoll": "No Scroll",
+  "key.noScroll": "No Scroll",
   "key.fineScroll": "Fine Scroll",
   "key.largeScroll": "Large Scroll",
-  "key.categories.chatplus": "ChatPlus",
+  "key.moveChat": "Move Chat",
+  "key.categories.chatPlus": "ChatPlus",
   "chatPlus.title": "ChatPlus"
 }

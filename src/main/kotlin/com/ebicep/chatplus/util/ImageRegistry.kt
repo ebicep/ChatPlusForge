@@ -11,14 +11,14 @@ enum class ImageRegistry(path: String) {
 
     ;
 
-    private var resourceLocation: ResourceLocation? = null
+    private var resourceLocation: ResourceLocation
 
     init {
         this.resourceLocation = ResourceLocation(MODID, path)
     }
 
 
-    fun getResourceLocation(): ResourceLocation? {
+    fun getResourceLocation(): ResourceLocation {
         return resourceLocation
     }
 

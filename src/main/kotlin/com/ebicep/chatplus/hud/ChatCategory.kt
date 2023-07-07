@@ -33,7 +33,7 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
         if (!regex.matches(pChatComponent.string)) {
             return
         }
-        var i = Mth.floor(ChatManager.getWidth().toDouble() / ChatManager.getScale())
+        var i = Mth.floor(ConfigGui.chatWidth / ChatManager.getScale())
 //            if (pTag?.icon() != null) {
 //                i -= pTag.icon()!!.width + 4 + 2
 //            }

@@ -1,7 +1,10 @@
 package com.ebicep.chatplus.hud
 
+import com.ebicep.chatplus.config.ChatPlusKeyBindings
 import com.ebicep.chatplus.config.ConfigGui
 import com.ebicep.chatplus.hud.ChatManager.selectedCategory
+import com.mojang.blaze3d.platform.InputConstants
+import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
@@ -14,24 +17,32 @@ object ChatRenderer : IGuiOverlay {
 
     val categoryYOffset = 1 // offset from text box
     val categoryXBetween = 1 // space between categories
+    val renderingMovingSize = 3 // width/length of box when rendering moving chat
 
     override fun render(gui: ForgeGui, guiGraphics: GuiGraphics, partialTick: Float, screenWidth: Int, screenHeight: Int) {
         val x: Int = ChatManager.getX()
         val y: Int = ChatManager.getY()
         val height: Int = ChatManager.getHeight()
-        val width: Int = ChatManager.getWidth()
+        val backgroundWidth: Int = ChatManager.getBackgroundWidth()
 
         val mc = Minecraft.getInstance()
         val poseStack = guiGraphics.pose()
         val linesPerPage: Int = ChatManager.getLinesPerPage()
         val chatFocused: Boolean = ChatManager.isChatFocused()
         val scale: Float = ConfigGui.scale.get().toFloat()
-        val backgroundWidth = (width / scale).toInt()
         val startingYOffset = Mth.floor(y / scale)
 
+        val textOpacity: Double = mc.options.chatOpacity().get() * 0.9 + 0.1
+        val backGroundOpacity: Double = mc.options.textBackgroundOpacity().get()
+        val lineSpacing: Double = mc.options.chatLineSpacing().get()
+        val lineHeight: Int = ChatManager.getLineHeight()
+        val l1 = (-8.0 * (lineSpacing + 1.0) + 4.0 * lineSpacing).roundToInt()
+//        var i2 = 0
+
+        // categories
         if (chatFocused) {
             poseStack.pushPose()
-            poseStack.translate(0f, y.toFloat() + categoryYOffset, 0f)
+            poseStack.translate(x.toFloat(), y.toFloat() + categoryYOffset, 0f)
             ChatManager.chatCategories.forEach {
                 it.render(gui, guiGraphics, partialTick, screenWidth, screenHeight)
                 poseStack.translate(
@@ -44,18 +55,32 @@ object ChatRenderer : IGuiOverlay {
         }
 
         if (selectedCategory.displayedMessages.size <= 0) {
+            if (InputConstants.isKeyDown(mc.window.window, ChatPlusKeyBindings.MOVE_CHAT.key.value)) {
+                guiGraphics.fill(
+                    x,
+                    y - height,
+                    x + backgroundWidth,
+                    y,
+                    (255 * backGroundOpacity).toInt() shl 24
+                )
+            }
+            renderMoving(
+                poseStack,
+                guiGraphics,
+                x,
+                y,
+                height,
+                backgroundWidth
+            )
             return
         }
+
+        val backgroundWidthRescaled = (backgroundWidth / scale).roundToInt()
 
         poseStack.pushPose()
         poseStack.scale(scale, scale, 1.0f)
 
-        val textOpacity: Double = mc.options.chatOpacity().get() * 0.9 + 0.1
-        val backGroundOpacity: Double = mc.options.textBackgroundOpacity().get()
-        val lineSpacing: Double = mc.options.chatLineSpacing().get()
-        val lineHeight: Int = ChatManager.getLineHeight()
-        val l1 = (-8.0 * (lineSpacing + 1.0) + 4.0 * lineSpacing).roundToInt()
-//        var i2 = 0
+
         var displayMessageIndex = 0
         while (displayMessageIndex + selectedCategory.chatScrollbarPos < selectedCategory.displayedMessages.size && displayMessageIndex < linesPerPage) {
             val line: GuiMessage.Line = selectedCategory.displayedMessages[displayMessageIndex + selectedCategory.chatScrollbarPos]
@@ -78,7 +103,13 @@ object ChatRenderer : IGuiOverlay {
             poseStack.pushPose()
             poseStack.translate(0.0f, 0.0f, 50.0f)
             //background
-            guiGraphics.fill(-x, verticalChatOffset - lineHeight, backgroundWidth, verticalChatOffset, backgroundColor shl 24)
+            guiGraphics.fill(
+                (x / scale).roundToInt(),
+                verticalChatOffset - lineHeight,
+                (x / scale).roundToInt() + backgroundWidthRescaled,
+                verticalChatOffset,
+                backgroundColor shl 24
+            )
 
             //thing on the right (server message cannot be reported)
             //val guimessagetag: GuiMessageTag? = line.tag()
@@ -96,12 +127,30 @@ object ChatRenderer : IGuiOverlay {
             guiGraphics.drawString(
                 Minecraft.getInstance().font,
                 line.content(),
-                0,
+                (x / scale).roundToInt(),
                 verticalTextOffset,
                 16777215 + (textColor shl 24)
             )
             poseStack.popPose()
             ++displayMessageIndex
+        }
+
+        if (InputConstants.isKeyDown(mc.window.window, ChatPlusKeyBindings.MOVE_CHAT.key.value)) {
+            guiGraphics.fill(
+                (x / scale).roundToInt(),
+                (startingYOffset - height / scale).roundToInt(),
+                (x / scale).roundToInt() + backgroundWidthRescaled,
+                startingYOffset - displayMessageIndex * lineHeight,
+                (255 * backGroundOpacity).toInt() shl 24
+            )
+            renderMoving(
+                poseStack,
+                guiGraphics,
+                (x / scale).roundToInt(),
+                startingYOffset,
+                (height / scale).roundToInt(),
+                backgroundWidthRescaled
+            )
         }
 
         //rendering queued messages
@@ -137,6 +186,37 @@ object ChatRenderer : IGuiOverlay {
 
 //        val mouseX = Mth.floor(mc.mouseHandler.xpos() * window.guiScaledWidth / window.screenWidth)
 //        val mouseY = Mth.floor(mc.mouseHandler.ypos() * window.guiScaledHeight / window.screenHeight)
+    }
+
+    private fun renderMoving(
+        poseStack: PoseStack,
+        guiGraphics: GuiGraphics,
+        x: Int,
+        y: Int,
+        height: Int,
+        backgroundWidth: Int
+    ) {
+        poseStack.pushPose()
+        poseStack.translate(0f, 0f, 200f)
+        if (ChatPlusScreen.movingChatX) {
+            guiGraphics.fill(
+                x + backgroundWidth - renderingMovingSize,
+                y - height,
+                x + backgroundWidth,
+                y,
+                0xFFFFFFFF.toInt()
+            )
+        }
+        if (ChatPlusScreen.movingChatY) {
+            guiGraphics.fill(
+                x,
+                y - height,
+                x + backgroundWidth,
+                y - height + renderingMovingSize,
+                0xFFFFFFFF.toInt()
+            )
+        }
+        poseStack.popPose()
     }
 
     private fun getTimeFactor(ticksLived: Int): Double {

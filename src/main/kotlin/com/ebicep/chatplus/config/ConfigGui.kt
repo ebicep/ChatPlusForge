@@ -17,10 +17,20 @@ class ConfigGui(private val lastScreen: Screen?) : Screen(Component.translatable
         val enabled: OptionInstance<Boolean> = OptionInstance.createBoolean("Enabled", Config.enabled.get()) {
             Config.delayedUpdates[Config.enabled] = { Config.enabled.set(it) }
         }
-        val x: Int = Config.x.get()
-        val y: Int = Config.y.get()
-        val chatWidth: Int = Config.width.get()
-        val chatHeight: Int = Config.height.get()
+        var x: Int = Config.x.get()
+        var y: Int = Config.y.get()
+        var chatWidth: Int = Config.width.get()
+            set(width) {
+                Config.delayedUpdates[Config.width] = { Config.width.set(width) }
+                field = width
+                ChatManager.selectedCategory.rescaleChat()
+            }
+        var chatHeight: Int = Config.height.get()
+            set(height) {
+                Config.delayedUpdates[Config.height] = { Config.height.set(height) }
+                field = height
+                ChatManager.selectedCategory.rescaleChat()
+            }
         val scale: OptionInstance<Double> = OptionInstance(
             "Scale",
             OptionInstance.noTooltip(),

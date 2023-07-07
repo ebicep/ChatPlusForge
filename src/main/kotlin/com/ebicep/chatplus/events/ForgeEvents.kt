@@ -1,9 +1,9 @@
 package com.ebicep.chatplus.events
 
 import com.ebicep.chatplus.MODID
-import com.ebicep.chatplus.config.Config
 import com.ebicep.chatplus.config.ConfigGui
 import com.ebicep.chatplus.config.ConfigGui.Companion.enabled
+import com.ebicep.chatplus.hud.ChatManager
 import com.ebicep.chatplus.hud.ChatPlusScreen
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
@@ -49,8 +49,14 @@ object ForgeEvents {
                 event.isCanceled = true
             }
 
-            "SAVE" -> {
-                Config.GENERAL_SPEC.save()
+            "RESET" -> {
+                ConfigGui.chatWidth = 200
+                event.isCanceled = true
+            }
+
+            "CLEAR" -> {
+                ChatManager.selectedCategory.messages.clear()
+                ChatManager.selectedCategory.displayedMessages.clear()
                 event.isCanceled = true
             }
         }
