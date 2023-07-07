@@ -34,7 +34,7 @@ class ConfigGui(private val lastScreen: Screen?) : Screen(Component.translatable
             OptionInstance.UnitDouble.INSTANCE,
             Config.scale.get(),
             {
-                ChatManager.rescaleChat()
+                ChatManager.selectedCategory.rescaleChat()
                 Config.delayedUpdates[Config.scale] = { Config.scale.set(it) }
             }
         )

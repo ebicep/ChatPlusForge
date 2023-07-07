@@ -1,5 +1,6 @@
 package mixin;
 
+import com.ebicep.chatplus.hud.ChatCategory;
 import com.ebicep.chatplus.hud.ChatManager;
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.gui.components.ChatComponent;
@@ -15,7 +16,9 @@ public class MixinChatManager {
 
     @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;ILnet/minecraft/client/GuiMessageTag;Z)V", at = @At("RETURN"))
     public void setChatLine(Component pChatComponent, MessageSignature pHeaderSignature, int pAddedTime, GuiMessageTag pTag, boolean pOnlyTrim, CallbackInfo ci) {
-        ChatManager.INSTANCE.addMessage(pChatComponent, pHeaderSignature, pAddedTime, pTag, pOnlyTrim);
+        for (ChatCategory chatCategory : ChatManager.INSTANCE.getChatCategories()) {
+            chatCategory.addMessage(pChatComponent, pHeaderSignature, pAddedTime, pTag, pOnlyTrim);
+        }
     }
 
 }

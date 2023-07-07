@@ -38,16 +38,16 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
 
     override fun init() {
         historyPos = ChatManager.sentMessages.size
-        input = object : EditBox(minecraft!!.fontFilterFishy, 4, height - 12, width - 4, 12, Component.translatable("chat_plus.editBox")) {
+        input = object : EditBox(minecraft!!.fontFilterFishy, 4, height - 12, width - 4, 12, Component.translatable("chatPlus.editBox")) {
             override fun createNarrationMessage(): MutableComponent {
                 return super.createNarrationMessage().append(commandSuggestions!!.narrationMessage)
             }
         }
         val editBox = input as EditBox
-        editBox.setMaxLength(256)
+        editBox.setMaxLength(256 * 2) // default 256
         editBox.setBordered(false)
         editBox.value = initial
-        editBox.setResponder { p_95611_: String -> onEdited(p_95611_) }
+        editBox.setResponder { str: String -> onEdited(str) }
         editBox.setCanLoseFocus(false)
         addWidget(editBox)
         commandSuggestions = CommandSuggestions(minecraft!!, this, editBox, font, false, false, 1, 10, true, -805306368)
@@ -63,14 +63,14 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
     }
 
     override fun removed() {
-        ChatManager.resetChatScroll()
+        ChatManager.selectedCategory.resetChatScroll()
     }
 
     override fun tick() {
         input!!.tick()
     }
 
-    private fun onEdited(p_95611_: String) {
+    private fun onEdited(str: String) {
         val s = input!!.value
         commandSuggestions!!.setAllowSuggestions(s != initial)
         commandSuggestions!!.updateCommandInfo()
@@ -98,12 +98,12 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                 }
                 // cycle through displayed chat messages
                 266 -> { // page up
-                    ChatManager.scrollChat(ChatManager.getLinesPerPage() - 1)
+                    ChatManager.selectedCategory.scrollChat(ChatManager.getLinesPerPage() - 1)
                     true
                 }
 
                 267 -> { // page down
-                    ChatManager.scrollChat(-ChatManager.getLinesPerPage() + 1)
+                    ChatManager.selectedCategory.scrollChat(-ChatManager.getLinesPerPage() + 1)
                     true
                 }
 
@@ -136,7 +136,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             } else if (!InputConstants.isKeyDown(window, ChatPlusKeyBindings.FINE_SCROLL.key.value)) {
                 delta *= 7.0
             }
-            ChatManager.scrollChat(delta.toInt())
+            ChatManager.selectedCategory.scrollChat(delta.toInt())
             true
         }
     }
@@ -146,7 +146,8 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             true
         } else {
             if (pButton == 0) {
-                if (ChatManager.handleChatQueueClicked(pMouseX, pMouseY)) {
+                ChatManager.handleClickedCategory(pMouseX, pMouseY)
+                if (ChatManager.selectedCategory.handleChatQueueClicked(pMouseX, pMouseY)) {
                     return true
                 }
                 val style = getComponentStyleAt(pMouseX, pMouseY)
@@ -155,7 +156,11 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     return true
                 }
             }
-            if (input!!.mouseClicked(pMouseX, pMouseY, pButton)) true else super.mouseClicked(pMouseX, pMouseY, pButton)
+            if (input!!.mouseClicked(pMouseX, pMouseY, pButton)) {
+                true
+            } else {
+                super.mouseClicked(pMouseX, pMouseY, pButton)
+            }
         }
     }
 
@@ -204,7 +209,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         commandSuggestions!!.render(guiGraphics, pMouseX, pMouseY)
 
         // hoverables
-        val guiMessageTag = ChatManager.getMessageTagAt(pMouseX.toDouble(), pMouseY.toDouble())
+        val guiMessageTag = ChatManager.selectedCategory.getMessageTagAt(pMouseX.toDouble(), pMouseY.toDouble())
         if (guiMessageTag?.text() != null) {
             guiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
         } else {
@@ -213,8 +218,6 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                 guiGraphics.renderComponentHoverEffect(font, style, pMouseX, pMouseY)
             }
         }
-
-
     }
 
     override fun isPauseScreen(): Boolean {
@@ -235,7 +238,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
     }
 
     private fun getComponentStyleAt(pMouseX: Double, pMouseY: Double): Style? {
-        return ChatManager.getClickedComponentStyleAt(pMouseX, pMouseY)
+        return ChatManager.selectedCategory.getClickedComponentStyleAt(pMouseX, pMouseY)
     }
 
     fun handleChatInput(pInput: String, pAddToRecentChat: Boolean): Boolean {
