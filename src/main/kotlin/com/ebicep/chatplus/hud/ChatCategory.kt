@@ -80,7 +80,7 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
     }
 
     fun screenToChatY(pY: Double): Double {
-        val d0: Double = Minecraft.getInstance().window.guiScaledHeight.toDouble() - pY - ChatManager.baseYOffset
+        val d0: Double = ChatManager.getY() - pY
         return d0 / (ChatManager.getScale() * ChatManager.getLineHeight().toDouble())
     }
 
@@ -144,7 +144,7 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
                 false
             } else {
                 val d0 = pMouseX - 2.0
-                val d1: Double = Minecraft.getInstance().window.guiScaledHeight.toDouble() - pMouseY - ChatManager.baseYOffset
+                val d1: Double = ChatManager.getY() - pMouseY
                 if (d0 <= Mth.floor(ChatManager.getWidth().toDouble() / ChatManager.getScale())
                         .toDouble() && d1 < 0.0 && d1 > Mth.floor(-9.0 * ChatManager.getScale())
                         .toDouble()
@@ -226,7 +226,6 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
             textColor
         )
         poseStack.popPose()
-
     }
 
 

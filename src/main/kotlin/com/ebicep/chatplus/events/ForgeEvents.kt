@@ -3,6 +3,7 @@ package com.ebicep.chatplus.events
 import com.ebicep.chatplus.MODID
 import com.ebicep.chatplus.config.Config
 import com.ebicep.chatplus.config.ConfigGui
+import com.ebicep.chatplus.config.ConfigGui.Companion.enabled
 import com.ebicep.chatplus.hud.ChatPlusScreen
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
@@ -21,6 +22,9 @@ object ForgeEvents {
 
     @SubscribeEvent
     fun onChatRender(event: RenderGuiOverlayEvent.Pre) {
+        if (!enabled.get()) {
+            return
+        }
         if (event.overlay == VanillaGuiOverlay.CHAT_PANEL.type()) {
             event.isCanceled = true
         }
@@ -28,6 +32,9 @@ object ForgeEvents {
 
     @SubscribeEvent
     fun onScreenOpen(event: ScreenEvent.Opening) {
+        if (!enabled.get()) {
+            return
+        }
         if (event.newScreen is ChatScreen && event.newScreen !is ChatPlusScreen) {
             event.newScreen = ChatPlusScreen(latestDefaultText)
         }

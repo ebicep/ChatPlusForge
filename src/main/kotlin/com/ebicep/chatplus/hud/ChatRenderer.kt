@@ -29,14 +29,19 @@ object ChatRenderer : IGuiOverlay {
         val backgroundWidth = (width / scale).toInt()
         val startingYOffset = Mth.floor(y / scale)
 
-        poseStack.pushPose()
-        poseStack.translate(0f, y.toFloat() + categoryYOffset, 0f)
-        ChatManager.chatCategories.forEach {
-            it.render(gui, guiGraphics, partialTick, screenWidth, screenHeight)
-            poseStack.translate(mc.font.width(it.name).toFloat() + ChatCategory.PADDING + ChatCategory.PADDING + categoryXBetween, 0f, 0f)
+        if (chatFocused) {
+            poseStack.pushPose()
+            poseStack.translate(0f, y.toFloat() + categoryYOffset, 0f)
+            ChatManager.chatCategories.forEach {
+                it.render(gui, guiGraphics, partialTick, screenWidth, screenHeight)
+                poseStack.translate(
+                    mc.font.width(it.name).toFloat() + ChatCategory.PADDING + ChatCategory.PADDING + categoryXBetween,
+                    0f,
+                    0f
+                )
+            }
+            poseStack.popPose()
         }
-
-        poseStack.popPose()
 
         if (selectedCategory.displayedMessages.size <= 0) {
             return

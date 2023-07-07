@@ -37,10 +37,11 @@ object ChatManager {
     }
 
     fun handleClickedCategory(x: Double, y: Double) {
-        val translatedY = Minecraft.getInstance().window.guiScaledHeight.toDouble() - y - baseYOffset
+        val translatedY = getY() - y
         var xOff = 0.0
         val font = Minecraft.getInstance().font
-        if (translatedY > -ChatRenderer.categoryYOffset || translatedY < -(9 + ChatCategory.PADDING + ChatCategory.PADDING)) {
+        //ChatPlus.LOGGER.debug("x: $x, translatedY: $translatedY")
+        if (translatedY > ChatRenderer.categoryYOffset || translatedY < -(9 + ChatCategory.PADDING + ChatCategory.PADDING)) {
             return
         }
         chatCategories.forEach {
@@ -82,11 +83,11 @@ object ChatManager {
     }
 
     fun getY(): Int {
-        var y = ConfigGui.y
+        var y = 300//ConfigGui.y
         if (y < 0) {
             y += Minecraft.getInstance().window.guiScaledHeight
         }
-        return Mth.clamp(y, baseYOffset, Minecraft.getInstance().window.guiScaledHeight - getHeight())
+        return Mth.clamp(y, baseYOffset + getHeight(), Minecraft.getInstance().window.guiScaledHeight - baseYOffset)
     }
 
 
