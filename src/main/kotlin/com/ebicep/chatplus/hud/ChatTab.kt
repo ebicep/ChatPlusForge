@@ -1,6 +1,6 @@
 package com.ebicep.chatplus.hud
 
-import com.ebicep.chatplus.config.ConfigGui
+import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
 import net.minecraft.client.Minecraft
@@ -15,7 +15,7 @@ import net.minecraftforge.client.gui.overlay.ForgeGui
 import net.minecraftforge.client.gui.overlay.IGuiOverlay
 import kotlin.math.min
 
-class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
+class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
     val regex = Regex(pattern)
     val messages: MutableList<GuiMessage> = ArrayList()
@@ -33,7 +33,7 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
         if (!regex.matches(pChatComponent.string)) {
             return
         }
-        var i = Mth.floor(ConfigGui.chatWidth / ChatManager.getScale())
+        var i = Mth.floor(ConfigChatSettingsGui.chatWidth / ChatManager.getScale())
 //            if (pTag?.icon() != null) {
 //                i -= pTag.icon()!!.width + 4 + 2
 //            }
@@ -55,7 +55,7 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
         }
         if (!pOnlyTrim) {
             this.messages.add(0, GuiMessage(pAddedTime, pChatComponent, pHeaderSignature, pTag))
-            while (this.messages.size > ConfigGui.maxMessages.get()) {
+            while (this.messages.size > ConfigChatSettingsGui.maxMessages.get()) {
                 this.messages.removeAt(this.messages.size - 1)
             }
         }
@@ -210,7 +210,7 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
     override fun render(gui: ForgeGui, guiGraphics: GuiGraphics, partialTick: Float, screenWidth: Int, screenHeight: Int) {
         val mc = Minecraft.getInstance()
         val poseStack = guiGraphics.pose()
-        val isSelected = this == ChatManager.selectedCategory
+        val isSelected = this == ChatManager.selectedTab
         val backgroundOpacity = ((if (isSelected) 255 else 100) * mc.options.textBackgroundOpacity().get()).toInt() shl 24
         val textColor = if (isSelected) 0xffffff else 0x999999
 
@@ -232,6 +232,5 @@ class ChatCategory(val name: String, val pattern: String) : IGuiOverlay {
     companion object {
         val PADDING = 2
     }
-
 
 }

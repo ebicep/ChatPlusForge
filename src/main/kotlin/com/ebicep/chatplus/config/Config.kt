@@ -2,6 +2,9 @@ package com.ebicep.chatplus.config
 
 import com.ebicep.chatplus.ChatPlus
 import com.ebicep.chatplus.hud.ChatManager
+import com.ebicep.chatplus.hud.ChatTab
+import config.ConfigHelper
+import hud.ChatTabRecord
 import net.minecraftforge.common.ForgeConfigSpec
 import kotlin.concurrent.fixedRateTimer
 
@@ -17,6 +20,7 @@ object Config {
     const val minMaxMessages = 1000
     const val maxMaxMessages = 10_000_000
     lateinit var maxMessages: ForgeConfigSpec.IntValue
+    lateinit var chatTabs: ConfigHelper.ConfigObject<MutableList<ChatTabRecord>>
 
     // values that need to be updated, runs every 10 seconds to prevent spam saving
     val delayedUpdates: HashMap<Any, () -> Unit> = HashMap()
@@ -32,6 +36,21 @@ object Config {
         }
     }
 
+    fun init() {
+        val loadedTabs = chatTabs.get()
+        ChatPlus.LOGGER.info("Trying to load ${loadedTabs.size} tabs.")
+        if (loadedTabs.size >= ConfigTabsGui.MAX_TABS) {
+            chatTabs.set(loadedTabs.subList(0, ConfigTabsGui.MAX_TABS))
+        }
+
+        val tabs = chatTabs.get()
+        ChatPlus.LOGGER.info("Loaded ${tabs.size} tabs.")
+        tabs.forEach {
+            ChatManager.chatTabs.add(ChatTab(it.name, it.pattern))
+        }
+        ChatManager.selectedTab = ChatManager.chatTabs[0]
+    }
+
     private fun setupConfig(builder: ForgeConfigSpec.Builder) {
         enabled = builder.define("enabled", true)
         x = builder.define("x", 0)
@@ -40,6 +59,19 @@ object Config {
         width = builder.define("width", 320)
         scale = builder.define("scale", 1.0)
         maxMessages = builder.defineInRange("maxMessages", minMaxMessages, minMaxMessages, maxMaxMessages)
+        chatTabs = ConfigHelper.defineObject(
+            builder,
+            "categories",
+            ChatTabRecord.CODEC.listOf(),
+            mutableListOf(ChatTabRecord("All", "(?s).*"))
+        )
     }
+
+    fun refreshTabs() {
+        val mutableList = mutableListOf<ChatTabRecord>()
+        ChatManager.chatTabs.forEach { mutableList.add(ChatTabRecord(it.name, it.pattern)) }
+        delayedUpdates[chatTabs] = { chatTabs.set(mutableList) }
+    }
+
 
 }

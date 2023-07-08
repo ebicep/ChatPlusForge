@@ -1,7 +1,7 @@
 package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
-import com.ebicep.chatplus.config.ConfigGui
+import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
@@ -65,7 +65,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
     }
 
     override fun removed() {
-        ChatManager.selectedCategory.resetChatScroll()
+        ChatManager.selectedTab.resetChatScroll()
     }
 
     override fun tick() {
@@ -100,12 +100,12 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                 }
                 // cycle through displayed chat messages
                 266 -> { // page up
-                    ChatManager.selectedCategory.scrollChat(ChatManager.getLinesPerPage() - 1)
+                    ChatManager.selectedTab.scrollChat(ChatManager.getLinesPerPage() - 1)
                     true
                 }
 
                 267 -> { // page down
-                    ChatManager.selectedCategory.scrollChat(-ChatManager.getLinesPerPage() + 1)
+                    ChatManager.selectedTab.scrollChat(-ChatManager.getLinesPerPage() + 1)
                     true
                 }
 
@@ -138,7 +138,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             } else if (!InputConstants.isKeyDown(window, ChatPlusKeyBindings.FINE_SCROLL.key.value)) {
                 delta *= 7.0
             }
-            ChatManager.selectedCategory.scrollChat(delta.toInt())
+            ChatManager.selectedTab.scrollChat(delta.toInt())
             true
         }
     }
@@ -169,7 +169,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     }
                 }
                 ChatManager.handleClickedCategory(pMouseX, pMouseY)
-                if (ChatManager.selectedCategory.handleChatQueueClicked(pMouseX, pMouseY)) {
+                if (ChatManager.selectedTab.handleChatQueueClicked(pMouseX, pMouseY)) {
                     return true
                 }
                 val style = getComponentStyleAt(pMouseX, pMouseY)
@@ -218,7 +218,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                 Minecraft.getInstance().window.guiScaledWidth - ChatManager.getX() - 0.0
             )
             val width = newWidth.roundToInt()
-            ConfigGui.chatWidth = width
+            ConfigChatSettingsGui.chatWidth = width
         }
         if (movingChatY) {
             val newHeight: Double = Mth.clamp(
@@ -228,16 +228,16 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             )
             val height = (ChatManager.getY() - newHeight).roundToInt()
             if (height > 90) {
-                ConfigGui.chatHeight = height
+                ConfigChatSettingsGui.chatHeight = height
             }
         }
         if (movingChatBox) {
-            ConfigGui.x = Mth.clamp(
+            ConfigChatSettingsGui.x = Mth.clamp(
                 (pMouseX - xDisplacement).roundToInt(),
                 0,
                 Minecraft.getInstance().window.guiScaledWidth - ChatManager.getBackgroundWidth() - 1
             )
-            ConfigGui.y = Mth.clamp(
+            ConfigChatSettingsGui.y = Mth.clamp(
                 (pMouseY - yDisplacement).roundToInt(),
                 1,
                 Minecraft.getInstance().window.guiScaledHeight - ChatManager.baseYOffset
@@ -324,7 +324,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         commandSuggestions!!.render(guiGraphics, pMouseX, pMouseY)
 
         // hoverables
-        val guiMessageTag = ChatManager.selectedCategory.getMessageTagAt(pMouseX.toDouble(), pMouseY.toDouble())
+        val guiMessageTag = ChatManager.selectedTab.getMessageTagAt(pMouseX.toDouble(), pMouseY.toDouble())
         if (guiMessageTag?.text() != null) {
             guiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
         } else {
@@ -353,7 +353,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
     }
 
     private fun getComponentStyleAt(pMouseX: Double, pMouseY: Double): Style? {
-        return ChatManager.selectedCategory.getClickedComponentStyleAt(pMouseX, pMouseY)
+        return ChatManager.selectedTab.getClickedComponentStyleAt(pMouseX, pMouseY)
     }
 
     fun handleChatInput(pInput: String, pAddToRecentChat: Boolean): Boolean {

@@ -36,6 +36,7 @@ object ChatPlus {
     //@SubscribeEvent
     private fun onClientSetup(event: FMLClientSetupEvent) {
         LOGGER.log(Level.INFO, "Initializing client...")
+        Config.init()
         LOGGER.log(Level.INFO, "Done initializing client")
     }
 

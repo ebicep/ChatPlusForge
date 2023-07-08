@@ -1,8 +1,8 @@
 package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
-import com.ebicep.chatplus.config.ConfigGui
-import com.ebicep.chatplus.hud.ChatManager.selectedCategory
+import com.ebicep.chatplus.config.ConfigChatSettingsGui
+import com.ebicep.chatplus.hud.ChatManager.selectedTab
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.GuiMessage
@@ -15,8 +15,8 @@ import kotlin.math.roundToInt
 
 object ChatRenderer : IGuiOverlay {
 
-    val categoryYOffset = 1 // offset from text box
-    val categoryXBetween = 1 // space between categories
+    val tabYOffset = 1 // offset from text box
+    val tabXBetween = 1 // space between categories
     val renderingMovingSize = 3 // width/length of box when rendering moving chat
 
     override fun render(gui: ForgeGui, guiGraphics: GuiGraphics, partialTick: Float, screenWidth: Int, screenHeight: Int) {
@@ -29,7 +29,7 @@ object ChatRenderer : IGuiOverlay {
         val poseStack = guiGraphics.pose()
         val linesPerPage: Int = ChatManager.getLinesPerPage()
         val chatFocused: Boolean = ChatManager.isChatFocused()
-        val scale: Float = ConfigGui.scale.get().toFloat()
+        val scale: Float = ConfigChatSettingsGui.scale.get().toFloat()
         val startingYOffset = Mth.floor(y / scale)
 
         val textOpacity: Double = mc.options.chatOpacity().get() * 0.9 + 0.1
@@ -42,11 +42,11 @@ object ChatRenderer : IGuiOverlay {
         // categories
         if (chatFocused) {
             poseStack.pushPose()
-            poseStack.translate(x.toFloat(), y.toFloat() + categoryYOffset, 0f)
-            ChatManager.chatCategories.forEach {
+            poseStack.translate(x.toFloat(), y.toFloat() + tabYOffset, 0f)
+            ChatManager.chatTabs.forEach {
                 it.render(gui, guiGraphics, partialTick, screenWidth, screenHeight)
                 poseStack.translate(
-                    mc.font.width(it.name).toFloat() + ChatCategory.PADDING + ChatCategory.PADDING + categoryXBetween,
+                    mc.font.width(it.name).toFloat() + ChatTab.PADDING + ChatTab.PADDING + tabXBetween,
                     0f,
                     0f
                 )
@@ -54,7 +54,7 @@ object ChatRenderer : IGuiOverlay {
             poseStack.popPose()
         }
 
-        if (selectedCategory.displayedMessages.size <= 0) {
+        if (selectedTab.displayedMessages.size <= 0) {
             if (InputConstants.isKeyDown(mc.window.window, ChatPlusKeyBindings.MOVE_CHAT.key.value)) {
                 guiGraphics.fill(
                     x,
@@ -82,8 +82,8 @@ object ChatRenderer : IGuiOverlay {
 
 
         var displayMessageIndex = 0
-        while (displayMessageIndex + selectedCategory.chatScrollbarPos < selectedCategory.displayedMessages.size && displayMessageIndex < linesPerPage) {
-            val line: GuiMessage.Line = selectedCategory.displayedMessages[displayMessageIndex + selectedCategory.chatScrollbarPos]
+        while (displayMessageIndex + selectedTab.chatScrollbarPos < selectedTab.displayedMessages.size && displayMessageIndex < linesPerPage) {
+            val line: GuiMessage.Line = selectedTab.displayedMessages[displayMessageIndex + selectedTab.chatScrollbarPos]
             val ticksLived: Int = gui.guiTicks - line.addedTime()
             if (ticksLived >= 200 && !chatFocused) {
                 ++displayMessageIndex
