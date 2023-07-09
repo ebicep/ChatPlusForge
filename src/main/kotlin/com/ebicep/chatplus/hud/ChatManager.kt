@@ -122,7 +122,7 @@ object ChatManager {
     }
 
     fun getLinesPerPageScaled(): Int {
-        return (getLinesPerPage() / getScale()).toInt()
+        return (getLinesPerPage() / getScale()).roundToInt()
     }
 
     fun getLineHeight(): Int {
