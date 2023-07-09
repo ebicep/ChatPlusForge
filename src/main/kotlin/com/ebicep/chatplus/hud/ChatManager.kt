@@ -116,6 +116,17 @@ object ChatManager {
         return y
     }
 
+//    /**
+//     * Y offset from bottom, all values should be negative
+//     */
+//    fun getYOffset(): Int {
+//        var y = ConfigChatSettingsGui.y
+//        if (y > 0) {
+//            y = -baseYOffset
+//            ConfigChatSettingsGui.y = y
+//        }
+//    }
+
 
     fun getLinesPerPage(): Int {
         return getHeight() / getLineHeight()

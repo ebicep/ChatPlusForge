@@ -1,6 +1,8 @@
 package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
+import com.ebicep.chatplus.config.ConfigChatSettingsGui
+import com.ebicep.chatplus.hud.ChatManager.baseYOffset
 import com.ebicep.chatplus.hud.ChatManager.selectedTab
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.vertex.PoseStack
@@ -18,7 +20,31 @@ object ChatRenderer : IGuiOverlay {
     val tabXBetween = 1 // space between categories
     val renderingMovingSize = 3 // width/length of box when rendering moving chat
 
+    private var previousScreenWidth = -1
+    private var previousScreenHeight = -1
+
     override fun render(gui: ForgeGui, guiGraphics: GuiGraphics, partialTick: Float, screenWidth: Int, screenHeight: Int) {
+        // updating chat box to previous relative position
+        if (screenWidth != previousScreenWidth && previousScreenWidth != -1) {
+            val oldRatio = ConfigChatSettingsGui.x / previousScreenWidth.toDouble()
+            ConfigChatSettingsGui.x = (screenWidth * oldRatio).roundToInt()
+        }
+        if (screenHeight != previousScreenHeight && previousScreenHeight != -1) {
+            val oldY = ConfigChatSettingsGui.y
+            if (oldY >= previousScreenHeight - baseYOffset) {
+                ConfigChatSettingsGui.y = screenHeight - baseYOffset
+            } else {
+                val oldRatio = oldY / previousScreenHeight.toDouble()
+                var newY = (screenHeight * oldRatio).roundToInt()
+                if (newY > screenHeight - baseYOffset) {
+                    newY = -baseYOffset
+                }
+                ConfigChatSettingsGui.y = newY
+            }
+        }
+        previousScreenWidth = screenWidth
+        previousScreenHeight = screenHeight
+
         val mc = Minecraft.getInstance()
         val poseStack = guiGraphics.pose()
 
