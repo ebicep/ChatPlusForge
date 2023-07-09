@@ -33,12 +33,10 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         if (!regex.matches(pChatComponent.string)) {
             return
         }
-        var i = Mth.floor(ChatManager.getBackgroundWidth())
+        val i = Mth.floor(ChatManager.getBackgroundWidth())
 //            if (pTag?.icon() != null) {
 //                i -= pTag.icon()!!.width + 4 + 2
 //            }
-//        ChatPlus.LOGGER.info("i: $i")
-//        ChatPlus.LOGGER.info("pChatComponent: ${pChatComponent.contents}")
         val list = ComponentRenderUtils.wrapComponents(pChatComponent, i, Minecraft.getInstance().font)
         val flag = ChatManager.isChatFocused()
         for (j in list.indices) {
@@ -211,7 +209,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         val mc = Minecraft.getInstance()
         val poseStack = guiGraphics.pose()
         val isSelected = this == ChatManager.selectedTab
-        val backgroundOpacity = ((if (isSelected) 255 else 100) * mc.options.textBackgroundOpacity().get()).toInt() shl 24
+        val backgroundOpacity = ((if (isSelected) 255 else 100) * ChatManager.getBackgroundOpacity()).toInt() shl 24
         val textColor = if (isSelected) 0xffffff else 0x999999
 
         poseStack.pushPose()

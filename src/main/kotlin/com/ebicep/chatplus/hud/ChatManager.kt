@@ -122,7 +122,19 @@ object ChatManager {
     }
 
     fun getLineHeight(): Int {
-        return 9
+        return (9.0 * (getLineSpacing() + 1.0)).toInt()
+    }
+
+    fun getTextOpacity(): Double {
+        return ConfigChatSettingsGui.textOpacity.get()
+    }
+
+    fun getBackgroundOpacity(): Double {
+        return ConfigChatSettingsGui.backgroundOpacity.get()
+    }
+
+    fun getLineSpacing(): Double {
+        return ConfigChatSettingsGui.lineSpacing.get()
     }
 
 }

@@ -20,6 +20,10 @@ object Config {
     const val minMaxMessages = 1000
     const val maxMaxMessages = 10_000_000
     lateinit var maxMessages: ForgeConfigSpec.IntValue
+    lateinit var textOpacity: ForgeConfigSpec.ConfigValue<Double>
+    lateinit var backgroundOpacity: ForgeConfigSpec.ConfigValue<Double>
+    lateinit var lineSpacing: ForgeConfigSpec.ConfigValue<Double>
+
     lateinit var chatTabs: ConfigHelper.ConfigObject<MutableList<ChatTabRecord>>
 
     // values that need to be updated, runs every 10 seconds to prevent spam saving
@@ -59,9 +63,12 @@ object Config {
         width = builder.define("width", 320)
         scale = builder.define("scale", 1.0)
         maxMessages = builder.defineInRange("maxMessages", minMaxMessages, minMaxMessages, maxMaxMessages)
+        textOpacity = builder.define("textOpacity", 1.0)
+        backgroundOpacity = builder.define("backgroundOpacity", 0.5)
+        lineSpacing = builder.define("lineSpacing", 0.0)
         chatTabs = ConfigHelper.defineObject(
             builder,
-            "categories",
+            "tab",
             ChatTabRecord.CODEC.listOf(),
             mutableListOf(ChatTabRecord("All", "(?s).*"))
         )

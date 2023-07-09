@@ -14,12 +14,10 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
 
     companion object {
         val enabled: OptionInstance<Boolean> = OptionInstance.createBoolean(
-            "Enabled",
+            "chatPlus.chatSettings.toggle",
             OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.toggle.tooltip")),
             Config.enabled.get()
-        ) {
-            Config.delayedUpdates[Config.enabled] = { Config.enabled.set(it) }
-        }
+        ) { Config.delayedUpdates[Config.enabled] = { Config.enabled.set(it) } }
         var x: Int = Config.x.get()
         var y: Int = Config.y.get()
         var chatWidth: Int = Config.width.get()
@@ -35,7 +33,7 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
                 ChatManager.selectedTab.rescaleChat()
             }
         val scale: OptionInstance<Double> = OptionInstance(
-            "Chat Text Size",
+            "chatPlus.chatSettings.chatTextSize",
             OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.chatTextSize.tooltip")),
             { component: Component, value: Double ->
                 if (value == 0.0) {
@@ -52,7 +50,7 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
             }
         )
         val maxMessages: OptionInstance<Int> = OptionInstance(
-            "Max Messages",
+            "chatPlus.chatSettings.maxMessages",
             OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.maxMessages.tooltip")),
             { component: Component, value: Int ->
                 if (value == 0) {
@@ -63,9 +61,31 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
             },
             OptionInstance.IntRange(Config.minMaxMessages, Config.maxMaxMessages),
             Config.maxMessages.get(),
-            {
-                Config.delayedUpdates[Config.maxMessages] = { Config.maxMessages.set(it) }
-            }
+            { Config.delayedUpdates[Config.maxMessages] = { Config.maxMessages.set(it) } }
+        )
+        val textOpacity = OptionInstance(
+            "chatPlus.chatSettings.textOpacity",
+            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.textOpacity.tooltip")),
+            { component: Component, value: Double -> percentValueLabel(component, value * 0.9 + 0.1) },
+            OptionInstance.UnitDouble.INSTANCE,
+            Config.textOpacity.get(),
+            { Config.delayedUpdates[Config.textOpacity] = { Config.textOpacity.set(it) } }
+        )
+        val backgroundOpacity = OptionInstance(
+            "chatPlus.chatSettings.backgroundOpacity",
+            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.backgroundOpacity.tooltip")),
+            { component: Component, value: Double -> percentValueLabel(component, value) },
+            OptionInstance.UnitDouble.INSTANCE,
+            Config.backgroundOpacity.get(),
+            { Config.delayedUpdates[Config.backgroundOpacity] = { Config.backgroundOpacity.set(it) } }
+        )
+        val lineSpacing = OptionInstance(
+            "chatPlus.chatSettings.lineSpacing",
+            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.lineSpacing.tooltip")),
+            { component: Component, value: Double -> percentValueLabel(component, value) },
+            OptionInstance.UnitDouble.INSTANCE,
+            0.0,
+            { Config.delayedUpdates[Config.lineSpacing] = { Config.lineSpacing.set(it) } }
         )
 
         private var rescaleChat = false
@@ -92,8 +112,11 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
         this.list!!.addSmall(
             arrayOf(
                 enabled,
-                scale,
                 maxMessages,
+                scale,
+                textOpacity,
+                backgroundOpacity,
+                lineSpacing
             )
         )
         this.addWidget(this.list!!)
@@ -119,27 +142,27 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
         minecraft!!.setScreen(lastScreen)
     }
 
-    //    fun ChatOptionsScreen(pLastScreen: Screen?, pOptions: Options) {
-    //        arrayOf<OptionInstance<*>>(
-    //            pOptions.chatVisibility(),
-    //            pOptions.chatColors(),
-    //            pOptions.chatLinks(),
-    //            pOptions.chatLinksPrompt(),
-    //            pOptions.chatOpacity(),
-    //            pOptions.textBackgroundOpacity(),
-    //            pOptions.chatScale(),
-    //            pOptions.chatLineSpacing(),
-    //            pOptions.chatDelay(),
-    //            pOptions.chatWidth(),
-    //            pOptions.chatHeightFocused(),
-    //            pOptions.chatHeightUnfocused(),
-    //            pOptions.narrator(),
-    //            pOptions.autoSuggestions(),
-    //            pOptions.hideMatchedNames(),
-    //            pOptions.reducedDebugInfo(),
-    //            pOptions.onlyShowSecureChat()
-    //        )
-    //    }
+    fun ChatOptionsScreen(pLastScreen: Screen?, pOptions: Options) {
+        arrayOf<OptionInstance<*>>(
+            pOptions.chatVisibility(),
+            pOptions.chatColors(),
+            pOptions.chatLinks(),
+            pOptions.chatLinksPrompt(),
+            pOptions.chatOpacity(),
+            pOptions.textBackgroundOpacity(),
+            pOptions.chatScale(),
+            pOptions.chatLineSpacing(),
+            pOptions.chatDelay(),
+            pOptions.chatWidth(),
+            pOptions.chatHeightFocused(),
+            pOptions.chatHeightUnfocused(),
+            pOptions.narrator(),
+            pOptions.autoSuggestions(),
+            pOptions.hideMatchedNames(),
+            pOptions.reducedDebugInfo(),
+            pOptions.onlyShowSecureChat()
+        )
+    }
     //
     //    private fun options(pOptions: Options): Array<OptionInstance<*>>? {
     //        return arrayOf(

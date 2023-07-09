@@ -93,7 +93,6 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     moveInHistory(-1)
                     true
                 }
-
                 264 -> { // down arrow
                     moveInHistory(1)
                     true
@@ -103,12 +102,10 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     ChatManager.selectedTab.scrollChat(ChatManager.getLinesPerPage() - 1)
                     true
                 }
-
                 267 -> { // page down
                     ChatManager.selectedTab.scrollChat(-ChatManager.getLinesPerPage() + 1)
                     true
                 }
-
                 else -> {
                     false
                 }
@@ -201,15 +198,13 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             movingChat = false
             return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
         }
-        // mouse over roof of chat
-        //ChatPlus.LOGGER.debug("mouseX: $pMouseX, mouseY: $pMouseY, button: $pButton, dragX: $pDragX, dragY: $pDragY")
-        if (
-            pMouseX > Minecraft.getInstance().window.guiScaledWidth || pMouseY > Minecraft.getInstance().window.guiScaledHeight ||
-            pMouseX < 0 || pMouseY < 0
-        ) {
-            //movingChat = false
-            return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
-        }
+//        if (
+//            pMouseX > Minecraft.getInstance().window.guiScaledWidth || pMouseY > Minecraft.getInstance().window.guiScaledHeight ||
+//            pMouseX < 0 || pMouseY < 0
+//        ) {
+//            //movingChat = false
+//            return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
+//        }
         val scale = ChatManager.getScale()
         if (movingChatX) {
             val newWidth: Double = Mth.clamp(
