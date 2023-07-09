@@ -209,7 +209,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         if (movingChatX) {
             val newWidth: Double = Mth.clamp(
                 pMouseX - ChatManager.getX(),
-                160.0 / scale,
+                ChatManager.getMinWidthScaled().toDouble(),
                 Minecraft.getInstance().window.guiScaledWidth - ChatManager.getX() - 1.0
             )
             val width = newWidth.roundToInt()
@@ -218,7 +218,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         if (movingChatY) {
             val newHeight: Double = Mth.clamp(
                 ChatManager.getY() - pMouseY,
-                80.0 / scale,
+                ChatManager.getMinHeightScaled().toDouble(),
                 ChatManager.getY() - 1.0
             )
             val height = newHeight.roundToInt()

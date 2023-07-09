@@ -7,11 +7,21 @@ import kotlin.math.roundToInt
 object ChatManager {
 
     val baseYOffset = 29
+    val minHeight = 80
+    val minWidth = 160
 
     val sentMessages: MutableList<String> = ArrayList()
 
     val chatTabs: MutableList<ChatTab> = ArrayList()
     var selectedTab: ChatTab = ChatTab("All", "(?s).*")
+
+    fun getMinWidthScaled(): Int {
+        return (minWidth / getScale()).roundToInt()
+    }
+
+    fun getMinHeightScaled(): Int {
+        return (minHeight / getScale()).roundToInt()
+    }
 
     /**
      * Gets the list of messages previously sent through the chat GUI
@@ -59,6 +69,13 @@ object ChatManager {
      */
     fun getWidth(): Int {
         val guiWidth = Minecraft.getInstance().window.guiScaledWidth
+        val minWidthScaled = getMinWidthScaled()
+        val lowerThanMin = ConfigChatSettingsGui.chatWidth < minWidthScaled
+        val hasSpace = guiWidth - getX() - 1 >= minWidthScaled
+        if (lowerThanMin && hasSpace) {
+            ConfigChatSettingsGui.chatWidth = minWidthScaled
+            selectedTab.rescaleChat()
+        }
         if (ConfigChatSettingsGui.chatWidth <= 0) {
             ConfigChatSettingsGui.chatWidth = 200.coerceAtMost(guiWidth - getX() - 1)
         }
@@ -77,6 +94,13 @@ object ChatManager {
      * Height of chat window, raw value not scaled
      */
     fun getHeight(): Int {
+        val minHeightScaled = getMinHeightScaled()
+        val lowerThanMin = ConfigChatSettingsGui.chatHeight < minHeightScaled
+        val hasSpace = getY() - 1 >= minHeightScaled
+        if (lowerThanMin && hasSpace) {
+            ConfigChatSettingsGui.chatHeight = minHeightScaled
+            selectedTab.rescaleChat()
+        }
         if (getY() - ConfigChatSettingsGui.chatHeight <= 0) {
             ConfigChatSettingsGui.chatHeight = getY() - 1
         }
