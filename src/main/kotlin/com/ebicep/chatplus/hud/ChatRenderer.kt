@@ -69,10 +69,10 @@ object ChatRenderer : IGuiOverlay {
         val rescaledY = (y / scale).toInt()
         val rescaledHeight = (height / scale).toInt()
         val rescaledWidth = (backgroundWidth / scale).toInt()
-        val linesPerPage: Int = ChatManager.getLinesPerPage()
+        val rescaledLinesPerPage: Int = ChatManager.getLinesPerPageScaled()
         val lineHeight: Int = ChatManager.getLineHeight()
         var displayMessageIndex = 0
-        while (displayMessageIndex + selectedTab.chatScrollbarPos < selectedTab.displayedMessages.size && displayMessageIndex < linesPerPage) {
+        while (displayMessageIndex + selectedTab.chatScrollbarPos < selectedTab.displayedMessages.size && displayMessageIndex < rescaledLinesPerPage) {
             val line: GuiMessage.Line = selectedTab.displayedMessages[displayMessageIndex + selectedTab.chatScrollbarPos]
             val ticksLived: Int = gui.guiTicks - line.addedTime()
             if (ticksLived >= 200 && !chatFocused) {

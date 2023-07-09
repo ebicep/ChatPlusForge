@@ -171,8 +171,8 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
     fun scrollChat(pPosInc: Int) {
         chatScrollbarPos += pPosInc
         val displayedMessagesSize: Int = this.displayedMessages.size
-        if (chatScrollbarPos > displayedMessagesSize - ChatManager.getLinesPerPage()) {
-            chatScrollbarPos = displayedMessagesSize - ChatManager.getLinesPerPage()
+        if (chatScrollbarPos > displayedMessagesSize - ChatManager.getLinesPerPageScaled()) {
+            chatScrollbarPos = displayedMessagesSize - ChatManager.getLinesPerPageScaled()
         }
         if (chatScrollbarPos <= 0) {
             chatScrollbarPos = 0
