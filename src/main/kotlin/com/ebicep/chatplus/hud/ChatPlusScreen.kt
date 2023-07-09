@@ -148,8 +148,8 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             true
         } else {
             if (pButton == 0) {
-                val side = ChatManager.getX() + ChatManager.getBackgroundWidth()
-                val sideInner = ChatManager.getX() + ChatManager.getBackgroundWidth() - ChatRenderer.renderingMovingSize
+                val side = ChatManager.getX() + ChatManager.getWidth()
+                val sideInner = ChatManager.getX() + ChatManager.getWidth() - ChatRenderer.renderingMovingSize
                 val roof = ChatManager.getY() - ChatManager.getHeight()
                 val roofInner = ChatManager.getY() - ChatManager.getHeight() + ChatRenderer.renderingMovingSize
                 if (pMouseX > sideInner && pMouseX < side && pMouseY > roof && pMouseY < ChatManager.getY()) {
@@ -210,36 +210,34 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             //movingChat = false
             return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
         }
-
+        val scale = ChatManager.getScale()
         if (movingChatX) {
             val newWidth: Double = Mth.clamp(
-                (pMouseX - ChatManager.getX()) * ChatManager.getScale(),
-                160.0,
-                Minecraft.getInstance().window.guiScaledWidth - ChatManager.getX() - 0.0
+                pMouseX - ChatManager.getX(),
+                160.0 / scale,
+                Minecraft.getInstance().window.guiScaledWidth - ChatManager.getX() - 1.0
             )
             val width = newWidth.roundToInt()
             ConfigChatSettingsGui.chatWidth = width
         }
         if (movingChatY) {
             val newHeight: Double = Mth.clamp(
-                pMouseY,
-                1.0,
-                ChatManager.getY() - 90.0
+                ChatManager.getY() - pMouseY,
+                80.0 / scale,
+                ChatManager.getY() - 1.0
             )
-            val height = (ChatManager.getY() - newHeight).roundToInt()
-            if (height > 90) {
-                ConfigChatSettingsGui.chatHeight = height
-            }
+            val height = newHeight.roundToInt()
+            ConfigChatSettingsGui.chatHeight = height
         }
         if (movingChatBox) {
             ConfigChatSettingsGui.x = Mth.clamp(
                 (pMouseX - xDisplacement).roundToInt(),
                 0,
-                Minecraft.getInstance().window.guiScaledWidth - ChatManager.getBackgroundWidth() - 1
+                Minecraft.getInstance().window.guiScaledWidth - ChatManager.getWidth() - 1
             )
             ConfigChatSettingsGui.y = Mth.clamp(
                 (pMouseY - yDisplacement).roundToInt(),
-                1,
+                ChatManager.getHeight() + 1,
                 Minecraft.getInstance().window.guiScaledHeight - ChatManager.baseYOffset
             )
         }

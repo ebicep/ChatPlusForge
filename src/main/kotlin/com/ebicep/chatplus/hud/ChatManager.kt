@@ -2,7 +2,6 @@ package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import net.minecraft.client.Minecraft
-import net.minecraft.util.Mth
 import kotlin.math.roundToInt
 
 object ChatManager {
@@ -55,54 +54,66 @@ object ChatManager {
         return ConfigChatSettingsGui.scale.get().toFloat()
     }
 
+    /**
+     * Width of chat window, raw value not scaled
+     */
     fun getWidth(): Int {
-        val guiScaledWidth = Minecraft.getInstance().window.guiScaledWidth
-        if (ConfigChatSettingsGui.chatWidth < 0) {
-            ConfigChatSettingsGui.chatWidth = 200
-        } else if (getX() + ConfigChatSettingsGui.chatWidth / getScale() > guiScaledWidth) {
-            ConfigChatSettingsGui.chatWidth = (Mth.clamp(
-                (ConfigChatSettingsGui.chatWidth / getScale()).toInt(),
-                getX() + 160,
-                guiScaledWidth
-            ) * getScale()).roundToInt() - 1
+        val guiWidth = Minecraft.getInstance().window.guiScaledWidth
+        if (ConfigChatSettingsGui.chatWidth <= 0) {
+            ConfigChatSettingsGui.chatWidth = 200.coerceAtMost(guiWidth - getX() - 1)
+        }
+        if (getX() + ConfigChatSettingsGui.chatWidth >= guiWidth) {
+            ConfigChatSettingsGui.chatWidth = guiWidth - getX() - 1
         }
         return ConfigChatSettingsGui.chatWidth
     }
 
-    fun getBackgroundWidth(): Int {
-        return (getWidth() / getScale()).toInt()
+    fun getBackgroundWidth(): Float {
+        return getWidth() / getScale()
     }
 
+
+    /**
+     * Height of chat window, raw value not scaled
+     */
     fun getHeight(): Int {
-        if (getY() - ConfigChatSettingsGui.chatHeight < 0) {
-            ConfigChatSettingsGui.chatHeight = getY()
+        if (getY() - ConfigChatSettingsGui.chatHeight <= 0) {
+            ConfigChatSettingsGui.chatHeight = getY() - 1
+        }
+        if (ConfigChatSettingsGui.chatHeight >= getY()) {
+            ConfigChatSettingsGui.chatHeight = getY() - 1
         }
         return if (isChatFocused()) {
             return ConfigChatSettingsGui.chatHeight
         } else {
-            return (ConfigChatSettingsGui.chatHeight * .5).toInt()
+            return (ConfigChatSettingsGui.chatHeight * .5).roundToInt()
         }
     }
 
     fun getX(): Int {
-        val clamp = Mth.clamp(
-            ConfigChatSettingsGui.x,
-            0,
-            Minecraft.getInstance().window.guiScaledWidth - (ConfigChatSettingsGui.chatWidth / getScale()).toInt()
-        )
-        if (clamp < 0) {
-            ConfigChatSettingsGui.x = 0
-            return 0
+        var x = ConfigChatSettingsGui.x
+        if (x < 0) {
+            x = 0
+            ConfigChatSettingsGui.x = x
         }
-        return clamp
+        if (x >= Minecraft.getInstance().window.guiScaledWidth) {
+            x = Minecraft.getInstance().window.guiScaledWidth - 1
+            ConfigChatSettingsGui.x = x
+        }
+        return x
     }
 
     fun getY(): Int {
         var y = ConfigChatSettingsGui.y
         if (y < 0) {
             y += Minecraft.getInstance().window.guiScaledHeight
+            ConfigChatSettingsGui.y = y
         }
-        return Mth.clamp(y, ConfigChatSettingsGui.chatHeight, Minecraft.getInstance().window.guiScaledHeight - baseYOffset)
+        if (y >= Minecraft.getInstance().window.guiScaledHeight) {
+            y = Minecraft.getInstance().window.guiScaledHeight - baseYOffset
+            ConfigChatSettingsGui.y = y
+        }
+        return y
     }
 
 

@@ -33,7 +33,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         if (!regex.matches(pChatComponent.string)) {
             return
         }
-        var i = Mth.floor(ConfigChatSettingsGui.chatWidth / ChatManager.getScale())
+        var i = Mth.floor(ChatManager.getBackgroundWidth())
 //            if (pTag?.icon() != null) {
 //                i -= pTag.icon()!!.width + 4 + 2
 //            }

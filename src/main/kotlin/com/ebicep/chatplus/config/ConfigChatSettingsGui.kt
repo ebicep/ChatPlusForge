@@ -35,8 +35,8 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
                 ChatManager.selectedTab.rescaleChat()
             }
         val scale: OptionInstance<Double> = OptionInstance(
-            "Scale",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.scale.tooltip")),
+            "Chat Text Size",
+            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.chatTextSize.tooltip")),
             { component: Component, value: Double ->
                 if (value == 0.0) {
                     CommonComponents.optionStatus(component, false)
@@ -47,7 +47,7 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
             OptionInstance.UnitDouble.INSTANCE,
             Config.scale.get(),
             {
-                ChatManager.selectedTab.rescaleChat()
+                rescaleChat = true
                 Config.delayedUpdates[Config.scale] = { Config.scale.set(it) }
             }
         )
@@ -67,6 +67,8 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
                 Config.delayedUpdates[Config.maxMessages] = { Config.maxMessages.set(it) }
             }
         )
+
+        private var rescaleChat = false
 
         //StringWidget
         private fun percentValueLabel(component: Component, value: Double): Component {
@@ -111,6 +113,9 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
     }
 
     override fun onClose() {
+        if (rescaleChat) {
+            ChatManager.selectedTab.rescaleChat()
+        }
         minecraft!!.setScreen(lastScreen)
     }
 
