@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "ChatPlus.refmap.json",
+  "refmap": "chatplus.mixins.refmap.json",
   "mixins": [
   ],
   "client": [

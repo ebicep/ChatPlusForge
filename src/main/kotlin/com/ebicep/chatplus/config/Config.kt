@@ -33,7 +33,7 @@ object Config {
         val builder = ForgeConfigSpec.Builder()
         setupConfig(builder)
         GENERAL_SPEC = builder.build()
-        ChatPlus.LOGGER.info("Initialized config.")
+        //ChatPlus.LOGGER.info("Initialized config.")
         fixedRateTimer(period = 10 * 1000) {
             delayedUpdates.forEach { it.value() }
             delayedUpdates.clear()
