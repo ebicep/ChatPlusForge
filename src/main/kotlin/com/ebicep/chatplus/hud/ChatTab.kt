@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.ComponentRenderUtils
 import net.minecraft.client.multiplayer.chat.ChatListener
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MessageSignature
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
@@ -37,6 +38,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 //            if (pTag?.icon() != null) {
 //                i -= pTag.icon()!!.width + 4 + 2
 //            }
+        //addTimestampToComponent(pChatComponent)
         val list = ComponentRenderUtils.wrapComponents(pChatComponent, i, Minecraft.getInstance().font)
         val flag = ChatManager.isChatFocused()
         for (j in list.indices) {
@@ -55,6 +57,24 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
             this.messages.add(0, GuiMessage(pAddedTime, pChatComponent, pHeaderSignature, pTag))
             while (this.messages.size > ConfigChatSettingsGui.maxMessages.get()) {
                 this.messages.removeAt(this.messages.size - 1)
+            }
+        }
+    }
+
+    fun addTimestampToComponent(pChatComponent: Component) {
+        val previousHover = pChatComponent.style.hoverEvent
+        if (previousHover != null) {
+            when (previousHover.action) {
+                HoverEvent.Action.SHOW_TEXT -> {
+                    val component: Component = previousHover.getValue(HoverEvent.Action.SHOW_TEXT)!!
+                    component.siblings.add(Component.literal("\ntest"))
+                }
+            }
+        } else {
+            pChatComponent.style.hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("test"))
+            // only add if parent does not have a hover event
+            pChatComponent.siblings.forEach {
+                addTimestampToComponent(it)
             }
         }
     }

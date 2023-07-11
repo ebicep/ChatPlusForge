@@ -1,5 +1,6 @@
 package com.ebicep.chatplus.hud
 
+import com.ebicep.chatplus.ChatPlus
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.mojang.blaze3d.platform.InputConstants
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.narration.NarratedElementType
 import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
@@ -93,6 +95,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     moveInHistory(-1)
                     true
                 }
+
                 264 -> { // down arrow
                     moveInHistory(1)
                     true
@@ -102,10 +105,12 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     ChatManager.selectedTab.scrollChat(ChatManager.getLinesPerPage() - 1)
                     true
                 }
+
                 267 -> { // page down
                     ChatManager.selectedTab.scrollChat(-ChatManager.getLinesPerPage() + 1)
                     true
                 }
+
                 else -> {
                     false
                 }
@@ -322,7 +327,24 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             guiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
         } else {
             val style = getComponentStyleAt(pMouseX.toDouble(), pMouseY.toDouble())
-            if (style != null && style.hoverEvent != null) {
+            if (style == null) {
+                return
+            }
+            var hoverEvent = style.hoverEvent
+            if (hoverEvent != null) {
+                when (hoverEvent.action) {
+                    HoverEvent.Action.SHOW_TEXT -> {
+                        hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverEvent.getValue(HoverEvent.Action.SHOW_TEXT)!!.copy())
+                        val component: Component = hoverEvent.getValue(HoverEvent.Action.SHOW_TEXT)!!
+                        component.siblings.add(Component.literal("\ntest"))
+                    }
+                }
+            } else {
+                hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("test"))
+            }
+            ChatPlus.LOGGER.debug(hoverEvent.toString())
+
+            if (hoverEvent != null) {
                 guiGraphics.renderComponentHoverEffect(font, style, pMouseX, pMouseY)
             }
         }
