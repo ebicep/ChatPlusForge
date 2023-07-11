@@ -1,16 +1,16 @@
 package com.ebicep.chatplus.events
 
 import com.ebicep.chatplus.MODID
-import com.ebicep.chatplus.config.Config
-import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.ebicep.chatplus.config.ConfigChatSettingsGui.Companion.enabled
 import com.ebicep.chatplus.config.ConfigGui
 import com.ebicep.chatplus.hud.ChatManager
 import com.ebicep.chatplus.hud.ChatPlusScreen
-import hud.ChatTabRecord
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
-import net.minecraftforge.client.event.ClientChatEvent
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.commands.Commands
+import net.minecraftforge.client.event.RegisterClientCommandsEvent
 import net.minecraftforge.client.event.RenderGuiOverlayEvent
 import net.minecraftforge.client.event.ScreenEvent
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay
@@ -44,37 +44,29 @@ object ForgeEvents {
     }
 
     @SubscribeEvent
-    fun onChat(event: ClientChatEvent) {
-        val message = event.message
-        when (message) {
-            "OPEN" -> {
+    fun onRegisterCommands(event: RegisterClientCommandsEvent) {
+        event.dispatcher.register(Commands.literal("chatplus")
+            .then(
+                LiteralArgumentBuilder.literal<CommandSourceStack?>("clearchat")
+                    .then(Commands.literal("all")
+                        .executes {
+                            ChatManager.chatTabs.forEach {
+                                it.messages.clear()
+                                it.displayedMessages.clear()
+                            }
+                            1
+                        })
+                    .then(Commands.literal("selected")
+                        .executes {
+                            ChatManager.selectedTab.messages.clear()
+                            ChatManager.selectedTab.displayedMessages.clear()
+                            1
+                        })
+            )
+            .executes {
                 Minecraft.getInstance().setScreen(ConfigGui(null))
-                event.isCanceled = true
-            }
+                1
+            })
 
-            "RESET" -> {
-                ConfigChatSettingsGui.chatWidth = 200
-                event.isCanceled = true
-            }
-
-            "CLEAR" -> {
-                ChatManager.selectedTab.messages.clear()
-                ChatManager.selectedTab.displayedMessages.clear()
-                event.isCanceled = true
-            }
-
-            "TEST" -> {
-                val categoryRecords = Config.chatTabs.get()
-                categoryRecords.add(ChatTabRecord("PARTY", "?D?WE?WDW"))
-                Config.chatTabs.set(categoryRecords)
-                event.isCanceled = true
-            }
-        }
     }
-
-//    @SubscribeEvent
-//    fun onConfigReload(event : ModConfigEvent.Reloading) {
-//        ChatPlus.LOGGER.info("Reloading config...")
-//    }
-
 }
