@@ -1,6 +1,5 @@
 package com.ebicep.chatplus.hud
 
-import com.ebicep.chatplus.ChatPlus
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.mojang.blaze3d.platform.InputConstants
@@ -12,11 +11,9 @@ import net.minecraft.client.gui.narration.NarratedElementType
 import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
-import net.minecraft.util.StringUtil
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.roundToInt
 
@@ -48,7 +45,7 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             }
         }
         val editBox = input as EditBox
-        editBox.setMaxLength(256 * 2) // default 256
+        editBox.setMaxLength(256 * 5) // default 256
         editBox.setBordered(false)
         editBox.value = initial
         editBox.setResponder { str: String -> onEdited(str) }
@@ -376,20 +373,39 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         return if (input.isEmpty()) {
             true
         } else {
-            if (pAddToRecentChat) {
-                ChatManager.addSentMessage(input)
-            }
-            if (input.startsWith("/")) {
-                minecraft!!.player!!.connection.sendCommand(input.substring(1))
+            if (input[0].startsWith("/")) {
+                minecraft!!.player!!.connection.sendCommand(input[0].substring(1))
             } else {
-                minecraft!!.player!!.connection.sendChat(input)
+                input.forEach {
+                    if (pAddToRecentChat) {
+                        ChatManager.addSentMessage(it)
+                    }
+                    minecraft!!.player!!.connection.sendChat(it)
+                }
             }
             minecraft!!.screen === this // FORGE: Prevent closing the screen if another screen has been opened.
         }
     }
 
-    fun normalizeChatMessage(pMessage: String): String {
-        return StringUtil.trimChatMessage(StringUtils.normalizeSpace(pMessage.trim { it <= ' ' }))
+    fun normalizeChatMessage(pMessage: String): List<String> {
+        val normalizeSpace = StringUtils.normalizeSpace(pMessage.trim { it <= ' ' })
+
+        return if (normalizeSpace.length <= 256) {
+            listOf(normalizeSpace)
+        } else {
+            val list = ArrayList<String>()
+            var i = 0
+            while (i < normalizeSpace.length) {
+                var j = i + 256
+                if (j >= normalizeSpace.length) {
+                    j = normalizeSpace.length
+                }
+                list.add(normalizeSpace.substring(i, j))
+                i = j
+            }
+            list
+        }
+        //return StringUtil.trimChatMessage(normalizeSpace)
     }
 
     companion object {
