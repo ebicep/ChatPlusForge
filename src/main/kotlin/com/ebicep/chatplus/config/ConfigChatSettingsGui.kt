@@ -1,6 +1,7 @@
 package com.ebicep.chatplus.config
 
 import com.ebicep.chatplus.hud.ChatManager
+import com.mojang.serialization.Codec
 import net.minecraft.client.OptionInstance
 import net.minecraft.client.Options
 import net.minecraft.client.gui.GuiGraphics
@@ -9,6 +10,8 @@ import net.minecraft.client.gui.components.OptionsList
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
+import net.minecraft.util.ByIdMap
+import net.minecraft.util.OptionEnum
 
 class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.translatable("chatPlus.chatSettings")) {
 
@@ -87,6 +90,19 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
             0.0,
             { Config.delayedUpdates[Config.lineSpacing] = { Config.lineSpacing.set(it) } }
         )
+        val chatTimestampMode = OptionInstance(
+            "chatPlus.chatSettings.chatTimestampMode",
+            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.chatTimestampMode.tooltip")),
+            OptionInstance.forOptionEnum(),
+            OptionInstance.Enum(
+                listOf(*TimestampMode.values()),
+                Codec.INT.xmap(
+                    { pId: Int -> TimestampMode.byId(pId) },
+                    { obj: TimestampMode -> obj.id }
+                )
+            ),
+            TimestampMode.byId(Config.chatTimestampMode.get())
+        ) { Config.delayedUpdates[Config.chatTimestampMode] = { Config.chatTimestampMode.set(it.id) } }
 
         private var rescaleChat = false
 
@@ -97,6 +113,36 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
 
         private fun genericValueLabel(pText: Component, pValue: Int): Component {
             return Options.genericValueLabel(pText, Component.literal(pValue.toString()))
+        }
+
+        enum class TimestampMode(private val id: Int, private val key: String, val format: String) : OptionEnum {
+            NONE(0, "chatPlus.chatSettings.chatTimestampMode.off", ""),
+            HR_12(1, "chatPlus.chatSettings.chatTimestampMode.hr_12", "[hh:mm a]"),
+            HR_12_SECOND(2, "chatPlus.chatSettings.chatTimestampMode.hr_12_second", "[hh:mm:ss a]"),
+            HR_24(3, "chatPlus.chatSettings.chatTimestampMode.hr_24", "[HH:mm]"),
+            HR_24_SECOND(4, "chatPlus.chatSettings.chatTimestampMode.hr_24_second", "[HH:mm:ss]"),
+
+            ;
+
+            override fun getId(): Int {
+                return id
+            }
+
+            override fun getKey(): String {
+                return key
+            }
+
+            companion object {
+                private val BY_ID = ByIdMap.continuous(
+                    { timestampMode: TimestampMode -> timestampMode.getId() },
+                    TimestampMode.values(),
+                    ByIdMap.OutOfBoundsStrategy.WRAP
+                )
+
+                fun byId(pId: Int): TimestampMode {
+                    return BY_ID.apply(pId)
+                }
+            }
         }
     }
 
@@ -116,7 +162,8 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
                 scale,
                 textOpacity,
                 backgroundOpacity,
-                lineSpacing
+                lineSpacing,
+                chatTimestampMode
             )
         )
         this.addWidget(this.list!!)

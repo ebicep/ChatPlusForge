@@ -321,27 +321,10 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         // hoverables
         val guiMessageTag = ChatManager.selectedTab.getMessageTagAt(pMouseX.toDouble(), pMouseY.toDouble())
         if (guiMessageTag?.text() != null) {
-            guiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
+            //guiGraphics.renderTooltip(font, font.split(guiMessageTag.text()!!, 210), pMouseX, pMouseY)
         } else {
             val style = getComponentStyleAt(pMouseX.toDouble(), pMouseY.toDouble())
-            if (style == null) {
-                return
-            }
-            var hoverEvent = style.hoverEvent
-            if (hoverEvent != null) {
-                when (hoverEvent.action) {
-                    HoverEvent.Action.SHOW_TEXT -> {
-                        hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverEvent.getValue(HoverEvent.Action.SHOW_TEXT)!!.copy())
-                        val component: Component = hoverEvent.getValue(HoverEvent.Action.SHOW_TEXT)!!
-                        component.siblings.add(Component.literal("\ntest"))
-                    }
-                }
-            } else {
-                hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("test"))
-            }
-            ChatPlus.LOGGER.debug(hoverEvent.toString())
-
-            if (hoverEvent != null) {
+            if (style?.hoverEvent != null) {
                 guiGraphics.renderComponentHoverEffect(font, style, pMouseX, pMouseY)
             }
         }
@@ -374,7 +357,11 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
             true
         } else {
             if (input[0].startsWith("/")) {
-                minecraft!!.player!!.connection.sendCommand(input[0].substring(1))
+                val command = input[0]
+                if (pAddToRecentChat) {
+                    ChatManager.addSentMessage(command)
+                }
+                minecraft!!.player!!.connection.sendCommand(command.substring(1))
             } else {
                 input.forEach {
                     if (pAddToRecentChat) {

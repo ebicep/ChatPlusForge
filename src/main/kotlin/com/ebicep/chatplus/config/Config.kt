@@ -23,8 +23,9 @@ object Config {
     lateinit var textOpacity: ForgeConfigSpec.ConfigValue<Double>
     lateinit var backgroundOpacity: ForgeConfigSpec.ConfigValue<Double>
     lateinit var lineSpacing: ForgeConfigSpec.ConfigValue<Double>
+    lateinit var chatTimestampMode: ForgeConfigSpec.ConfigValue<Int>
 
-    lateinit var chatTabs: ConfigHelper.ConfigObject<MutableList<ChatTabRecord>>
+    private lateinit var chatTabs: ConfigHelper.ConfigObject<MutableList<ChatTabRecord>>
 
     // values that need to be updated, runs every 10 seconds to prevent spam saving
     val delayedUpdates: HashMap<Any, () -> Unit> = HashMap()
@@ -66,6 +67,9 @@ object Config {
         textOpacity = builder.define("textOpacity", 1.0)
         backgroundOpacity = builder.define("backgroundOpacity", 0.5)
         lineSpacing = builder.define("lineSpacing", 0.0)
+        chatTimestampMode = builder.define("chatTimestampMode", 0)
+
+
         chatTabs = ConfigHelper.defineObject(
             builder,
             "tab",

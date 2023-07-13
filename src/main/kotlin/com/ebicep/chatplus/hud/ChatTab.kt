@@ -1,6 +1,7 @@
 package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
+import net.minecraft.ChatFormatting
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
 import net.minecraft.client.Minecraft
@@ -8,12 +9,16 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.ComponentRenderUtils
 import net.minecraft.client.multiplayer.chat.ChatListener
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MessageSignature
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
 import net.minecraftforge.client.gui.overlay.ForgeGui
 import net.minecraftforge.client.gui.overlay.IGuiOverlay
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.min
+
 
 class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
@@ -37,7 +42,9 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 //            if (pTag?.icon() != null) {
 //                i -= pTag.icon()!!.width + 4 + 2
 //            }
-        //addTimestampToComponent(pChatComponent)
+        if (ConfigChatSettingsGui.chatTimestampMode.get() != ConfigChatSettingsGui.Companion.TimestampMode.NONE && !pOnlyTrim) {
+            addTimestampToComponent(pChatComponent)
+        }
         val list = ComponentRenderUtils.wrapComponents(pChatComponent, i, Minecraft.getInstance().font)
         val flag = ChatManager.isChatFocused()
         for (j in list.indices) {
@@ -60,22 +67,48 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         }
     }
 
-    fun addTimestampToComponent(pChatComponent: Component) {
+    /**
+     * Adds timestamp to bottom of chat message, works for most chat formats
+     */
+    private fun addTimestampToComponent(pChatComponent: Component) {
         val previousHover = pChatComponent.style.hoverEvent
         if (previousHover != null) {
             when (previousHover.action) {
                 HoverEvent.Action.SHOW_TEXT -> {
                     val component: Component = previousHover.getValue(HoverEvent.Action.SHOW_TEXT)!!
-                    component.siblings.add(Component.literal("\ntest"))
+                    component.siblings.add(getTimestamp(true))
                 }
             }
         } else {
-            pChatComponent.style.hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("test"))
+            pChatComponent.style.hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, getTimestamp(false))
             // only add if parent does not have a hover event
             pChatComponent.siblings.forEach {
                 addTimestampToComponent(it)
             }
+
+//            if (pChatComponent.contents is TranslatableContents) {
+//                pChatComponent.contents.visit(FormattedText.StyledContentConsumer<MutableComponent> { style : Style, contents: String ->
+//                    style.hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, getTimestamp(false))
+//                    Optional.empty()
+//                }, Style.EMPTY)
+//            }
         }
+    }
+
+    private fun getTimestamp(newLine: Boolean): Component {
+        return Component.literal((if (newLine) "\n" else "") + "Sent at ")
+            .withStyle {
+                it.withColor(ChatFormatting.GRAY)
+            }
+            .append(Component.literal(getCurrentTime())
+                .withStyle {
+                    it.withColor(ChatFormatting.YELLOW)
+                })
+            .append(Component.literal("."))
+    }
+
+    fun getCurrentTime(): String {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern(ConfigChatSettingsGui.chatTimestampMode.get().format))
     }
 
     fun getMessageTagAt(pMouseX: Double, pMouseY: Double): GuiMessageTag? {
@@ -206,8 +239,9 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
     }
 
     private fun refreshTrimmedMessage() {
+        // TODO maybe dont clear and just readd last x messages for performance
         this.displayedMessages.clear()
-        for (i in this.messages.indices.reversed()) {
+        for (i in this.messages.indices) {
             val guiMessage: GuiMessage = this.messages[i]
             addMessage(guiMessage.content(), guiMessage.signature(), guiMessage.addedTime(), guiMessage.tag(), true)
         }
