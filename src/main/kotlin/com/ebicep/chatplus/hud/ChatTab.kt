@@ -8,7 +8,6 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.ComponentRenderUtils
 import net.minecraft.client.multiplayer.chat.ChatListener
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MessageSignature
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Mth
@@ -47,16 +46,16 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
                 updateChat = true
                 scrollChat(1)
             }
-            val flag1 = j == list.size - 1
-            this.displayedMessages.add(0, GuiMessage.Line(pAddedTime, formattedCharSequence, pTag, flag1))
+            val lastComponent = j == list.size - 1
+            this.displayedMessages.add(GuiMessage.Line(pAddedTime, formattedCharSequence, pTag, lastComponent))
         }
-        while (this.displayedMessages.size > 2000) {
-            this.displayedMessages.removeAt(this.displayedMessages.size - 1)
+        while (this.displayedMessages.size > ConfigChatSettingsGui.maxMessages.get()) {
+            this.displayedMessages.removeAt(0)
         }
         if (!pOnlyTrim) {
-            this.messages.add(0, GuiMessage(pAddedTime, pChatComponent, pHeaderSignature, pTag))
+            this.messages.add(GuiMessage(pAddedTime, pChatComponent, pHeaderSignature, pTag))
             while (this.messages.size > ConfigChatSettingsGui.maxMessages.get()) {
-                this.messages.removeAt(this.messages.size - 1)
+                this.messages.removeAt(0)
             }
         }
     }
@@ -120,7 +119,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
     private fun getMessageLineIndexAt(pMouseX: Double, pMouseY: Double): Int {
         return if (ChatManager.isChatFocused() && !Minecraft.getInstance().options.hideGui) {
             if (pMouseX >= -4.0 && pMouseX <= Mth.floor(ChatManager.getWidth().toDouble() / ChatManager.getScale()).toDouble()) {
-                val i = min(ChatManager.getLinesPerPage(), this.displayedMessages.size)
+                val i = min(ChatManager.getLinesPerPageScaled(), this.displayedMessages.size)
                 if (pMouseY >= 0.0 && pMouseY < i.toDouble()) {
                     val j = Mth.floor(pMouseY + chatScrollbarPos.toDouble())
                     if (j >= 0 && j < this.displayedMessages.size) {
@@ -191,8 +190,9 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
     fun scrollChat(pPosInc: Int) {
         chatScrollbarPos += pPosInc
         val displayedMessagesSize: Int = this.displayedMessages.size
-        if (chatScrollbarPos > displayedMessagesSize - ChatManager.getLinesPerPageScaled()) {
-            chatScrollbarPos = displayedMessagesSize - ChatManager.getLinesPerPageScaled()
+        val maxScroll = displayedMessagesSize - ChatManager.getLinesPerPageScaled()
+        if (chatScrollbarPos > maxScroll) {
+            chatScrollbarPos = maxScroll
         }
         if (chatScrollbarPos <= 0) {
             chatScrollbarPos = 0
@@ -214,12 +214,13 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
     }
 
     fun getClickedComponentStyleAt(pMouseX: Double, pMouseY: Double): Style? {
-        val d0 = screenToChatX(pMouseX)
-        val d1 = screenToChatY(pMouseY)
-        val i = getMessageLineIndexAt(d0, d1)
-        return if (i >= 0 && i < this.displayedMessages.size) {
-            val guiMessageLine: GuiMessage.Line = this.displayedMessages[i]
-            Minecraft.getInstance().font.splitter.componentStyleAtWidth(guiMessageLine.content(), Mth.floor(d0))
+        val x = screenToChatX(pMouseX)
+        val y = screenToChatY(pMouseY)
+        val i = getMessageLineIndexAt(x, y)
+        val size = this.displayedMessages.size
+        return if (i in 0 until size) {
+            val guiMessageLine: GuiMessage.Line = this.displayedMessages[size - i - 1]
+            Minecraft.getInstance().font.splitter.componentStyleAtWidth(guiMessageLine.content(), Mth.floor(x))
         } else {
             null
         }

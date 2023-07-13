@@ -67,7 +67,8 @@ object ChatRenderer : IGuiOverlay {
         }
 
         val moving = ChatManager.isChatFocused() && InputConstants.isKeyDown(mc.window.window, ChatPlusKeyBindings.MOVE_CHAT.key.value)
-        if (selectedTab.displayedMessages.size <= 0) {
+        val messagesToDisplay = selectedTab.displayedMessages.size
+        if (messagesToDisplay <= 0) {
             // render full chat box
             if (moving) {
                 guiGraphics.fill(
@@ -98,8 +99,9 @@ object ChatRenderer : IGuiOverlay {
         val rescaledLinesPerPage: Int = ChatManager.getLinesPerPageScaled()
         val lineHeight: Int = ChatManager.getLineHeight()
         var displayMessageIndex = 0
-        while (displayMessageIndex + selectedTab.chatScrollbarPos < selectedTab.displayedMessages.size && displayMessageIndex < rescaledLinesPerPage) {
-            val line: GuiMessage.Line = selectedTab.displayedMessages[displayMessageIndex + selectedTab.chatScrollbarPos]
+        while (displayMessageIndex + selectedTab.chatScrollbarPos < messagesToDisplay && displayMessageIndex < rescaledLinesPerPage) {
+            val messageIndex = messagesToDisplay - displayMessageIndex - selectedTab.chatScrollbarPos
+            val line: GuiMessage.Line = selectedTab.displayedMessages[messageIndex - 1]
             val ticksLived: Int = gui.guiTicks - line.addedTime()
             if (ticksLived >= 200 && !chatFocused) {
                 ++displayMessageIndex
