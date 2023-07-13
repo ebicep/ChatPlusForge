@@ -26,8 +26,7 @@ object ChatRenderer : IGuiOverlay {
     override fun render(gui: ForgeGui, guiGraphics: GuiGraphics, partialTick: Float, screenWidth: Int, screenHeight: Int) {
         // updating chat box to previous relative position
         if (screenWidth != previousScreenWidth && previousScreenWidth != -1) {
-            val oldRatio = ConfigChatSettingsGui.x / previousScreenWidth.toDouble()
-            ConfigChatSettingsGui.x = (screenWidth * oldRatio).roundToInt()
+            ConfigChatSettingsGui.x = (screenWidth * ConfigChatSettingsGui.x / previousScreenWidth.toDouble()).roundToInt()
         }
         if (screenHeight != previousScreenHeight && previousScreenHeight != -1) {
             val oldY = ConfigChatSettingsGui.y
@@ -40,6 +39,13 @@ object ChatRenderer : IGuiOverlay {
                     newY = -baseYOffset
                 }
                 ConfigChatSettingsGui.y = newY
+            }
+            val oldHeight = ConfigChatSettingsGui.chatHeight
+            if (oldHeight >= oldY - 1) {
+                ConfigChatSettingsGui.chatHeight = ConfigChatSettingsGui.y - 1
+            } else {
+                ConfigChatSettingsGui.chatHeight =
+                    (screenHeight * ConfigChatSettingsGui.chatHeight / previousScreenHeight.toDouble()).roundToInt()
             }
         }
         previousScreenWidth = screenWidth
