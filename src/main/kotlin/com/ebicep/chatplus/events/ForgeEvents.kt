@@ -14,6 +14,8 @@ import net.minecraftforge.client.event.RegisterClientCommandsEvent
 import net.minecraftforge.client.event.RenderGuiOverlayEvent
 import net.minecraftforge.client.event.ScreenEvent
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay
+import net.minecraftforge.event.TickEvent
+import net.minecraftforge.event.TickEvent.ClientTickEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod
 
@@ -69,4 +71,22 @@ object ForgeEvents {
             })
 
     }
+
+    var currentTick = 0
+
+    @SubscribeEvent
+    fun onTick(event: ClientTickEvent) {
+        if (event.phase != TickEvent.Phase.START) {
+            return
+        }
+        currentTick++
+
+        ChatManager.chatTabs.forEach {
+            if (it.resetDisplayMessageAtTick == currentTick) {
+                it.refreshDisplayedMessage()
+            }
+        }
+
+    }
+
 }

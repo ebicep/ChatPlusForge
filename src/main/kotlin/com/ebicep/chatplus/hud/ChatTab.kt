@@ -1,6 +1,7 @@
 package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
+import com.ebicep.chatplus.events.ForgeEvents
 import net.minecraft.ChatFormatting
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
@@ -27,6 +28,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
     val displayedMessages: MutableList<GuiMessage.Line> = ArrayList()
     var chatScrollbarPos: Int = 0
     var updateChat = false
+    var resetDisplayMessageAtTick = -1
 
     fun addMessage(
         pChatComponent: Component,
@@ -235,14 +237,18 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
     fun rescaleChat() {
         resetChatScroll()
-        refreshTrimmedMessage()
+        queueRefreshDisplayedMessages()
     }
 
-    private fun refreshTrimmedMessage() {
-        // TODO maybe dont clear and just readd last x messages for performance
-        this.displayedMessages.clear()
-        for (i in this.messages.indices) {
-            val guiMessage: GuiMessage = this.messages[i]
+    private fun queueRefreshDisplayedMessages() {
+        resetDisplayMessageAtTick = ForgeEvents.currentTick + 2
+    }
+
+    fun refreshDisplayedMessage() {
+        resetDisplayMessageAtTick = -1
+        displayedMessages.clear()
+        for (i in messages.indices) {
+            val guiMessage: GuiMessage = messages[i]
             addMessage(guiMessage.content(), guiMessage.signature(), guiMessage.addedTime(), guiMessage.tag(), true)
         }
     }
