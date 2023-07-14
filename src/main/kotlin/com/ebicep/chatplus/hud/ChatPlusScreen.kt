@@ -2,7 +2,9 @@ package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
+import com.ebicep.chatplus.events.ForgeEvents
 import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.client.GuiMessage
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.CommandSuggestions
@@ -78,14 +80,32 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
     }
 
     override fun keyPressed(pKeyCode: Int, pScanCode: Int, pModifiers: Int): Boolean {
+        val window = Minecraft.getInstance().window.window
+        val copyMessage = ChatPlusKeyBindings.COPY_MESSAGE
         return if (commandSuggestions!!.keyPressed(pKeyCode, pScanCode, pModifiers)) {
+            true
+        } else if (
+            copiedMessageCooldown < ForgeEvents.currentTick &&
+            InputConstants.isKeyDown(window, copyMessage.key.value) &&
+            copyMessage.isConflictContextAndModifierActive
+        ) {
+            copiedMessageCooldown = ForgeEvents.currentTick + 20
+            ChatManager.selectedTab.getMessageAt(lastMouseX.toDouble(), lastMouseY.toDouble())?.let {
+                copyToClipboard(it.content.toString())
+                lastCopiedMessage = Pair(it.line, ForgeEvents.currentTick + 60)
+            }
             true
         } else if (super.keyPressed(pKeyCode, pScanCode, pModifiers)) {
             true
         } else if (pKeyCode == 256) { // escape
             minecraft!!.setScreen(null as Screen?)
             true
-        } else if (pKeyCode != 257 && pKeyCode != 335) { // enter
+        } else if (pKeyCode == 257 || pKeyCode == 335) {
+            if (handleChatInput(input!!.value, true)) {
+                minecraft!!.setScreen(null as Screen?)
+            }
+            true
+        } else { // enter
             when (pKeyCode) {
                 // cycle through own sent messages
                 265 -> { // up arrow
@@ -112,12 +132,11 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
                     false
                 }
             }
-        } else {
-            if (handleChatInput(input!!.value, true)) {
-                minecraft!!.setScreen(null as Screen?)
-            }
-            true
         }
+    }
+
+    private fun copyToClipboard(str: String) {
+        Minecraft.getInstance().keyboardHandler.clipboard = str
     }
 
     override fun mouseScrolled(pMouseX: Double, pMouseY: Double, pDelta: Double): Boolean {
@@ -207,7 +226,6 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
 //            //movingChat = false
 //            return super.mouseDragged(pMouseX, pMouseY, pButton, pDragX, pDragY)
 //        }
-        val scale = ChatManager.getScale()
         if (movingChatX) {
             val newWidth: Double = Mth.clamp(
                 pMouseX - ChatManager.getX(),
@@ -242,38 +260,6 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         return true
     }
 
-//    var currentCursor: ImageRegistry? = null
-//
-//    fun changeCursor(image: ImageRegistry?) {
-//        if (currentCursor == image) {
-//            return
-//        } else {
-//
-//        }
-//    }
-//    companion object {
-//
-//        val cursors: MutableMap<ImageRegistry, Cursor> = mutableMapOf()
-//
-//        init {
-//            cursors.put(null, GLFW.glfwCreateCursor())
-//            val cursorImages = listOf(ImageRegistry.LEFTRIGHT, ImageRegistry.UPDOWN, ImageRegistry.MOVE)
-//            cursorImages.forEach {
-//                Minecraft.getInstance().resourceManager.getResource(it.getResourceLocation()).ifPresent { resource ->
-//                    val image: BufferedImage = ImageIO.read(resource.open())
-//                    val nativeImage = NativeImage(image.width, image.height, true)
-//                    val malloc = GLFWImage.malloc()
-//                    malloc.width(nativeImage.width)
-//                    malloc.height(nativeImage.height)
-//                    MemoryUtil.memPutAddress(malloc.address() + GLFWImage.PIXELS, nativeImage.pixels);
-//                    glfwCursorAddress = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
-//                }
-//            }
-//            GLFW.glfwSetCursor()
-//            GLFW.glfwCreateCursor()
-//        }
-//    }
-
     override fun insertText(pText: String, pOverwrite: Boolean) {
         if (pOverwrite) {
             input!!.value = pText
@@ -306,6 +292,8 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
     }
 
     override fun render(guiGraphics: GuiGraphics, pMouseX: Int, pMouseY: Int, pPartialTick: Float) {
+        lastMouseX = pMouseX
+        lastMouseY = pMouseY
         // input box
         guiGraphics.fill(0, height - 14, width, height, minecraft!!.options.getBackgroundColor(Int.MIN_VALUE))
         guiGraphics.pose().pushPose()
@@ -408,6 +396,12 @@ class ChatPlusScreen(pInitial: String) : Screen(Component.translatable("chat_plu
         var movingChatBox = false
         var xDisplacement = 0.0
         var yDisplacement = 0.0
+
+        var lastMouseX = 0
+        var lastMouseY = 0
+
+        var lastCopiedMessage: Pair<GuiMessage.Line, Long>? = null
+        var copiedMessageCooldown = -1L
     }
 
 

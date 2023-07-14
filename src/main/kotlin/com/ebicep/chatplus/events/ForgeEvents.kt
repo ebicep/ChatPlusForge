@@ -72,7 +72,7 @@ object ForgeEvents {
 
     }
 
-    var currentTick = 0
+    var currentTick = 0L
 
     @SubscribeEvent
     fun onTick(event: ClientTickEvent) {

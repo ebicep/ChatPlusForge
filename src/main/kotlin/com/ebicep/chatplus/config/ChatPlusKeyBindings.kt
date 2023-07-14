@@ -6,6 +6,7 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraftforge.client.settings.IKeyConflictContext
 import net.minecraftforge.client.settings.KeyConflictContext
+import net.minecraftforge.client.settings.KeyModifier
 import org.lwjgl.glfw.GLFW
 
 object ChatPlusKeyBindings {
@@ -14,10 +15,11 @@ object ChatPlusKeyBindings {
     val FINE_SCROLL: ChatPlusKeyMapping = ChatPlusKeyMapping("key.fineScroll", GLFW.GLFW_KEY_LEFT_SHIFT)
     val LARGE_SCROLL: ChatPlusKeyMapping = ChatPlusKeyMapping("key.largeScroll", GLFW.GLFW_KEY_LEFT_ALT)
     val MOVE_CHAT: ChatPlusKeyMapping = ChatPlusKeyMapping("key.moveChat", GLFW.GLFW_KEY_RIGHT_CONTROL)
-    val KEY_BINDINGS = arrayOf(NO_SCOLL, FINE_SCROLL, LARGE_SCROLL, MOVE_CHAT)
+    val COPY_MESSAGE: ChatPlusKeyMapping = ChatPlusKeyMapping("key.copyMessage", GLFW.GLFW_KEY_C, KeyModifier.CONTROL)
+    val KEY_BINDINGS = arrayOf(NO_SCOLL, FINE_SCROLL, LARGE_SCROLL, MOVE_CHAT, COPY_MESSAGE)
 
-    class ChatPlusKeyMapping(name: String, keyCode: Int) :
-        KeyMapping(name, ChatPlusKeyConflict(), InputConstants.Type.KEYSYM, keyCode, "key.categories.chatPlus") {
+    class ChatPlusKeyMapping(name: String, keyCode: Int, keyModifier: KeyModifier = KeyModifier.NONE) :
+        KeyMapping(name, ChatPlusKeyConflict(), keyModifier, InputConstants.Type.KEYSYM, keyCode, "key.categories.chatPlus") {
 
         override fun hasKeyModifierConflict(other: KeyMapping): Boolean {
             if (other.keyConflictContext == KeyConflictContext.UNIVERSAL) {

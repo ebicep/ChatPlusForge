@@ -2,22 +2,25 @@ package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.ebicep.chatplus.events.ForgeEvents
+import com.google.common.collect.Lists
+import hud.ChatPlusGuiMessageLine
 import net.minecraft.ChatFormatting
+import net.minecraft.client.ComponentCollector
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.gui.components.ComponentRenderUtils
 import net.minecraft.client.multiplayer.chat.ChatListener
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.MessageSignature
-import net.minecraft.network.chat.Style
+import net.minecraft.locale.Language
+import net.minecraft.network.chat.*
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.Mth
 import net.minecraftforge.client.gui.overlay.ForgeGui
 import net.minecraftforge.client.gui.overlay.IGuiOverlay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.math.min
 
 
@@ -25,10 +28,10 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
     val regex = Regex(pattern)
     val messages: MutableList<GuiMessage> = ArrayList()
-    val displayedMessages: MutableList<GuiMessage.Line> = ArrayList()
+    val displayedMessages: MutableList<ChatPlusGuiMessageLine> = ArrayList()
     var chatScrollbarPos: Int = 0
     var updateChat = false
-    var resetDisplayMessageAtTick = -1
+    var resetDisplayMessageAtTick = -1L
 
     fun addMessage(
         pChatComponent: Component,
@@ -47,16 +50,23 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         if (ConfigChatSettingsGui.chatTimestampMode.get() != ConfigChatSettingsGui.Companion.TimestampMode.NONE && !pOnlyTrim) {
             addTimestampToComponent(pChatComponent)
         }
-        val list = ComponentRenderUtils.wrapComponents(pChatComponent, i, Minecraft.getInstance().font)
+        val list = wrapComponents(pChatComponent, i, Minecraft.getInstance().font)
         val flag = ChatManager.isChatFocused()
         for (j in list.indices) {
-            val formattedCharSequence = list[j]
+            val chatPlusLine = list[j]
+            val formattedCharSequence = chatPlusLine.first
+            val content = chatPlusLine.second
             if (flag && chatScrollbarPos > 0) {
                 updateChat = true
                 scrollChat(1)
             }
             val lastComponent = j == list.size - 1
-            this.displayedMessages.add(GuiMessage.Line(pAddedTime, formattedCharSequence, pTag, lastComponent))
+            this.displayedMessages.add(
+                ChatPlusGuiMessageLine(
+                    GuiMessage.Line(pAddedTime, formattedCharSequence, pTag, lastComponent),
+                    content
+                )
+            )
         }
         while (this.displayedMessages.size > ConfigChatSettingsGui.maxMessages.get()) {
             this.displayedMessages.removeAt(0)
@@ -109,7 +119,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
             .append(Component.literal("."))
     }
 
-    fun getCurrentTime(): String {
+    private fun getCurrentTime(): String {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern(ConfigChatSettingsGui.chatTimestampMode.get().format))
     }
 
@@ -118,7 +128,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         val d1: Double = this.screenToChatY(pMouseY)
         val i: Int = this.getMessageEndIndexAt(d0, d1)
         if (i >= 0 && i < this.displayedMessages.size) {
-            val guiMessageLine: GuiMessage.Line = this.displayedMessages[i]
+            val guiMessageLine: GuiMessage.Line = this.displayedMessages[i].line
             val guiMessageTag = guiMessageLine.tag()
             if (guiMessageTag != null && this.hasSelectedMessageTag(d0, guiMessageLine, guiMessageTag)) {
                 return guiMessageTag
@@ -127,22 +137,34 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         return null
     }
 
-    fun screenToChatX(pX: Double): Double {
-        return pX / ChatManager.getScale()
+    fun getMessageAt(pMouseX: Double, pMouseY: Double): ChatPlusGuiMessageLine? {
+        val x = screenToChatX(pMouseX)
+        val y = screenToChatY(pMouseY)
+        val i = getMessageLineIndexAt(x, y)
+        val size = this.displayedMessages.size
+        return if (i in 0 until size) {
+            return this.displayedMessages[size - i - 1]
+        } else {
+            null
+        }
     }
 
-    fun screenToChatY(pY: Double): Double {
+    private fun screenToChatX(pX: Double): Double {
+        return (pX - ChatManager.getX()) / ChatManager.getScale()
+    }
+
+    private fun screenToChatY(pY: Double): Double {
         val d0: Double = ChatManager.getY() - pY
         return d0 / (ChatManager.getScale() * ChatManager.getLineHeight().toDouble())
     }
 
-    fun getMessageEndIndexAt(pMouseX: Double, pMouseY: Double): Int {
+    private fun getMessageEndIndexAt(pMouseX: Double, pMouseY: Double): Int {
         var i: Int = this.getMessageLineIndexAt(pMouseX, pMouseY)
         return if (i == -1) {
             -1
         } else {
             while (i >= 0) {
-                if (this.displayedMessages[i].endOfEntry()) {
+                if (this.displayedMessages[i].line.endOfEntry()) {
                     return i
                 }
                 --i
@@ -153,7 +175,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
     private fun getMessageLineIndexAt(pMouseX: Double, pMouseY: Double): Int {
         return if (ChatManager.isChatFocused() && !Minecraft.getInstance().options.hideGui) {
-            if (pMouseX >= -4.0 && pMouseX <= Mth.floor(ChatManager.getWidth().toDouble() / ChatManager.getScale()).toDouble()) {
+            if (pMouseX >= 0 && pMouseX <= Mth.floor(ChatManager.getBackgroundWidth())) {
                 val i = min(ChatManager.getLinesPerPageScaled(), this.displayedMessages.size)
                 if (pMouseY >= 0.0 && pMouseY < i.toDouble()) {
                     val j = Mth.floor(pMouseY + chatScrollbarPos.toDouble())
@@ -191,8 +213,8 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
     fun handleChatQueueClicked(pMouseX: Double, pMouseY: Double): Boolean {
         return if (ChatManager.isChatFocused() && !Minecraft.getInstance().options.hideGui) {
-            val chatlistener: ChatListener = Minecraft.getInstance().chatListener
-            if (chatlistener.queueSize() == 0L) {
+            val chatListener: ChatListener = Minecraft.getInstance().chatListener
+            if (chatListener.queueSize() == 0L) {
                 false
             } else {
                 val d0 = pMouseX - 2.0
@@ -201,7 +223,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
                         .toDouble() && d1 < 0.0 && d1 > Mth.floor(-9.0 * ChatManager.getScale())
                         .toDouble()
                 ) {
-                    chatlistener.acceptNextDelayedMessage()
+                    chatListener.acceptNextDelayedMessage()
                     true
                 } else {
                     false
@@ -259,7 +281,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         val i = getMessageLineIndexAt(x, y)
         val size = this.displayedMessages.size
         return if (i in 0 until size) {
-            val guiMessageLine: GuiMessage.Line = this.displayedMessages[size - i - 1]
+            val guiMessageLine: GuiMessage.Line = this.displayedMessages[size - i - 1].line
             Minecraft.getInstance().font.splitter.componentStyleAtWidth(guiMessageLine.content(), Mth.floor(x))
         } else {
             null
@@ -290,6 +312,33 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
 
     companion object {
         val PADDING = 2
+
+        private val INDENT = FormattedCharSequence.codepoint(32, Style.EMPTY)
+
+        private fun stripColor(pText: String): String? {
+            return if (Minecraft.getInstance().options.chatColors().get()) pText else ChatFormatting.stripFormatting(pText)
+        }
+
+        fun wrapComponents(pComponent: FormattedText, pMaxWidth: Int, pFont: Font): List<Pair<FormattedCharSequence, String>> {
+            val componentCollector = ComponentCollector()
+            pComponent.visit({ style: Style, string: String ->
+                componentCollector.append(FormattedText.of(stripColor(string)!!, style))
+                Optional.empty<Any?>()
+            }, Style.EMPTY)
+            val list: MutableList<Pair<FormattedCharSequence, String>> = Lists.newArrayList()
+            pFont.splitter.splitLines(
+                componentCollector.resultOrEmpty, pMaxWidth, Style.EMPTY
+            ) { formattedText: FormattedText, p_94004_: Boolean ->
+                val formattedCharSequence = Language.getInstance().getVisualOrder(formattedText)
+                list.add(
+                    Pair(
+                        if (p_94004_) FormattedCharSequence.composite(INDENT, formattedCharSequence) else formattedCharSequence,
+                        formattedText.string
+                    )
+                )
+            }
+            return (if (list.isEmpty()) mutableListOf(Pair(FormattedCharSequence.EMPTY, "")) else list)
+        }
     }
 
 }

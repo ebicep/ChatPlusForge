@@ -2,6 +2,7 @@ package com.ebicep.chatplus.hud
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
+import com.ebicep.chatplus.events.ForgeEvents
 import com.ebicep.chatplus.hud.ChatManager.baseYOffset
 import com.ebicep.chatplus.hud.ChatManager.selectedTab
 import com.mojang.blaze3d.platform.InputConstants
@@ -60,7 +61,7 @@ object ChatRenderer : IGuiOverlay {
         val y: Int = ChatManager.getY()
         val height: Int = ChatManager.getHeight()
         val width: Int = ChatManager.getWidth()
-        val backgroundWidth = x + width
+        val backgroundWidthEndX = x + width
 
         val textOpacity: Double = ChatManager.getTextOpacity() * 0.9 + 0.1
         val backGroundOpacity: Double = ChatManager.getBackgroundOpacity()
@@ -80,7 +81,7 @@ object ChatRenderer : IGuiOverlay {
                 guiGraphics.fill(
                     x,
                     y - height,
-                    backgroundWidth,
+                    backgroundWidthEndX,
                     y,
                     (255 * backGroundOpacity).toInt() shl 24
                 )
@@ -101,13 +102,13 @@ object ChatRenderer : IGuiOverlay {
         val rescaledX = (x / scale).toInt()
         val rescaledY = (y / scale).toInt()
         val rescaledHeight = (height / scale).toInt()
-        val rescaledWidth = (backgroundWidth / scale).toInt()
+        val rescaledWidth = (backgroundWidthEndX / scale).toInt()
         val rescaledLinesPerPage: Int = ChatManager.getLinesPerPageScaled()
         val lineHeight: Int = ChatManager.getLineHeight()
         var displayMessageIndex = 0
         while (displayMessageIndex + selectedTab.chatScrollbarPos < messagesToDisplay && displayMessageIndex < rescaledLinesPerPage) {
             val messageIndex = messagesToDisplay - displayMessageIndex - selectedTab.chatScrollbarPos
-            val line: GuiMessage.Line = selectedTab.displayedMessages[messageIndex - 1]
+            val line: GuiMessage.Line = selectedTab.displayedMessages[messageIndex - 1].line
             val ticksLived: Int = gui.guiTicks - line.addedTime()
             if (ticksLived >= 200 && !chatFocused) {
                 ++displayMessageIndex
@@ -142,6 +143,23 @@ object ChatRenderer : IGuiOverlay {
                 verticalTextOffset,
                 16777215 + (textColor shl 24)
             )
+            poseStack.translate(0f, 0f, 50f)
+            // copy outline
+            ChatPlusScreen.lastCopiedMessage?.let {
+                if (it.first != line) {
+                    return@let
+                }
+                if (it.second < ForgeEvents.currentTick) {
+                    return@let
+                }
+                guiGraphics.renderOutline(
+                    rescaledX,
+                    verticalChatOffset - lineHeight,
+                    (width / scale).toInt(),
+                    lineHeight,
+                    (0xd4d4d4FF).toInt()
+                )
+            }
             poseStack.popPose()
 
             ++displayMessageIndex
