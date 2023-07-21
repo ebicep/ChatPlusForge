@@ -24,9 +24,15 @@ import java.util.*
 import kotlin.math.min
 
 
-class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
+class ChatTab(var name: String, pattern: String) : IGuiOverlay {
 
-    val regex = Regex(pattern)
+    var pattern: String = pattern
+        set(value) {
+            field = value
+            regex = Regex(value)
+        }
+
+    var regex = Regex(pattern)
     val messages: MutableList<GuiMessage> = ArrayList()
     val displayedMessages: MutableList<ChatPlusGuiMessageLine> = ArrayList()
     var chatScrollbarPos: Int = 0
@@ -40,7 +46,7 @@ class ChatTab(var name: String, var pattern: String) : IGuiOverlay {
         pTag: GuiMessageTag?,
         pOnlyTrim: Boolean
     ) {
-        if (!regex.matches(pChatComponent.string)) {
+        if (!regex.containsMatchIn(pChatComponent.string)) {
             return
         }
         val i = Mth.floor(ChatManager.getBackgroundWidth())

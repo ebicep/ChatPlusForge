@@ -49,8 +49,10 @@ object ChatManager {
         }
         chatTabs.forEach {
             val categoryLength = font.width(it.name) + ChatTab.PADDING + ChatTab.PADDING
-            if (x > xOff && x < xOff + categoryLength) {
+            if (x > xOff && x < xOff + categoryLength && it != selectedTab) {
                 selectedTab = it
+                selectedTab.refreshDisplayedMessage()
+                return
             }
             xOff += categoryLength + ChatRenderer.tabXBetween
         }
