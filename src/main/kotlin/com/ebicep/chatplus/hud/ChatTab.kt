@@ -46,7 +46,7 @@ class ChatTab(var name: String, pattern: String) : IGuiOverlay {
         pTag: GuiMessageTag?,
         pOnlyTrim: Boolean
     ) {
-        if (!regex.containsMatchIn(pChatComponent.string)) {
+        if (!regex.matches(pChatComponent.string)) {
             return
         }
         val i = Mth.floor(ChatManager.getBackgroundWidth())
