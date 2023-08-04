@@ -25,7 +25,7 @@ plugins {
     id("org.parchmentmc.librarian.forgegradle") version "1.+"
 }
 
-version = "1.20-0.1.0"
+version = "0.1.0"
 group = "com.ebicep"
 
 val modid = "chatplus"
