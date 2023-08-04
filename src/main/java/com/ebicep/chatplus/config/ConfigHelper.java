@@ -1,4 +1,4 @@
-package config;
+package com.ebicep.chatplus.config;
 
 /*
 The MIT License (MIT)

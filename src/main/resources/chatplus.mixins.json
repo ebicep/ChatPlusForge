@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "mixin",
+  "package": "com.ebicep.chatplus.mixin",
   "compatibilityLevel": "JAVA_8",
   "refmap": "chatplus.mixins.refmap.json",
   "mixins": [

@@ -1,4 +1,4 @@
-package hud;
+package com.ebicep.chatplus.hud;
 
 import net.minecraft.client.GuiMessage;
 

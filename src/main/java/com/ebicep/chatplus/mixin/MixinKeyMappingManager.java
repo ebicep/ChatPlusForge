@@ -1,4 +1,4 @@
-package mixin;
+package com.ebicep.chatplus.mixin;
 
 import com.ebicep.chatplus.config.ChatPlusKeyBindings;
 import com.ebicep.chatplus.config.ConfigChatSettingsGui;

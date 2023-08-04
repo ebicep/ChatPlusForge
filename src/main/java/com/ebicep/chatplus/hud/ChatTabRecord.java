@@ -1,4 +1,4 @@
-package hud;
+package com.ebicep.chatplus.hud;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
