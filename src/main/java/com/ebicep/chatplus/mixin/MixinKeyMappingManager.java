@@ -13,7 +13,7 @@ public class MixinKeyMappingManager {
 
     @Inject(method = "same", at = @At("HEAD"), cancellable = true)
     public void same(KeyMapping pBinding, CallbackInfoReturnable<Boolean> cir) {
-        if (!ConfigChatSettingsGui.Companion.getEnabled().get()) {
+        if (!ConfigChatSettingsGui.Companion.isEnabled()) {
             return;
         }
         boolean otherIsChatPlusMapping = pBinding instanceof ChatPlusKeyBindings.ChatPlusKeyMapping;

@@ -3,6 +3,7 @@ package com.ebicep.chatplus.events
 import com.ebicep.chatplus.ChatPlus
 import com.ebicep.chatplus.MODID
 import com.ebicep.chatplus.config.ChatPlusKeyBindings
+import com.ebicep.chatplus.config.Config
 import com.ebicep.chatplus.hud.ChatRenderer
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent
@@ -10,6 +11,7 @@ import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay
 import net.minecraftforge.eventbus.api.EventPriority
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.fml.event.config.ModConfigEvent
 
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 object ModEvents {
@@ -25,6 +27,13 @@ object ModEvents {
         ChatPlusKeyBindings.KEY_BINDINGS.forEach {
             event.register(it)
             ChatPlus.LOGGER.info("Registered keybinding ${it.name}")
+        }
+    }
+
+    @SubscribeEvent
+    fun onConfigLoad(event: ModConfigEvent.Loading) {
+        if (event.config.getSpec() === Config.GENERAL_SPEC) {
+            Config.init()
         }
     }
 

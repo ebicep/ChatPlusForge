@@ -1,7 +1,7 @@
 package com.ebicep.chatplus.events
 
 import com.ebicep.chatplus.MODID
-import com.ebicep.chatplus.config.ConfigChatSettingsGui.Companion.enabled
+import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.ebicep.chatplus.config.ConfigGui
 import com.ebicep.chatplus.hud.ChatManager
 import com.ebicep.chatplus.hud.ChatPlusScreen
@@ -27,7 +27,7 @@ object ForgeEvents {
 
     @SubscribeEvent
     fun onChatRender(event: RenderGuiOverlayEvent.Pre) {
-        if (!enabled.get()) {
+        if (!ConfigChatSettingsGui.isEnabled()) {
             return
         }
         if (event.overlay == VanillaGuiOverlay.CHAT_PANEL.type()) {
@@ -37,7 +37,7 @@ object ForgeEvents {
 
     @SubscribeEvent
     fun onScreenOpen(event: ScreenEvent.Opening) {
-        if (!enabled.get()) {
+        if (!ConfigChatSettingsGui.isEnabled()) {
             return
         }
         if (event.newScreen is ChatScreen && event.newScreen !is ChatPlusScreen) {
@@ -64,6 +64,14 @@ object ForgeEvents {
                             ChatManager.selectedTab.displayedMessages.clear()
                             1
                         })
+            )
+            .then(
+                LiteralArgumentBuilder.literal<CommandSourceStack?>("test")
+                    .executes {
+                        //https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=hello%this%is%a%test%message
+                        StringBuilder()
+                        1
+                    }
             )
             .executes {
                 Minecraft.getInstance().setScreen(ConfigGui(null))

@@ -3,7 +3,6 @@ package com.ebicep.chatplus.hud
 import com.ebicep.chatplus.config.ConfigChatSettingsGui
 import com.ebicep.chatplus.events.ForgeEvents
 import com.google.common.collect.Lists
-import hud.ChatPlusGuiMessageLine
 import net.minecraft.ChatFormatting
 import net.minecraft.client.ComponentCollector
 import net.minecraft.client.GuiMessage

@@ -17,7 +17,7 @@ public class MixinChatManager {
 
     @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;ILnet/minecraft/client/GuiMessageTag;Z)V", at = @At("RETURN"))
     public void setChatLine(Component pChatComponent, MessageSignature pHeaderSignature, int pAddedTime, GuiMessageTag pTag, boolean pOnlyTrim, CallbackInfo ci) {
-        if (!ConfigChatSettingsGui.Companion.getEnabled().get()) {
+        if (!ConfigChatSettingsGui.Companion.isEnabled()) {
             return;
         }
         for (ChatTab chatTab : ChatManager.INSTANCE.getChatTabs()) {

@@ -13,7 +13,7 @@ public class MixinMinecraftManager {
 
     @Inject(method = "openChatScreen", at = @At("HEAD"))
     public void openChatScreen(String pDefaultText, CallbackInfo ci) {
-        if (!ConfigChatSettingsGui.Companion.getEnabled().get()) {
+        if (!ConfigChatSettingsGui.Companion.isEnabled()) {
             return;
         }
         ForgeEvents.INSTANCE.setLatestDefaultText(pDefaultText);

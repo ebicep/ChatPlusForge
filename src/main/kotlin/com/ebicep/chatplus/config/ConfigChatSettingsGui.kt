@@ -16,11 +16,17 @@ import net.minecraft.util.OptionEnum
 class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.translatable("chatPlus.chatSettings")) {
 
     companion object {
-        val enabled: OptionInstance<Boolean> = OptionInstance.createBoolean(
-            "chatPlus.chatSettings.toggle",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.toggle.tooltip")),
-            Config.enabled.get()
-        ) { Config.delayedUpdates[Config.enabled] = { Config.enabled.set(it) } }
+
+        // shown in GUI
+        lateinit var enabled: OptionInstance<Boolean>
+        lateinit var scale: OptionInstance<Double>
+        lateinit var maxMessages: OptionInstance<Int>
+        lateinit var textOpacity: OptionInstance<Double>
+        lateinit var backgroundOpacity: OptionInstance<Double>
+        lateinit var lineSpacing: OptionInstance<Double>
+        lateinit var chatTimestampMode: OptionInstance<TimestampMode>
+
+        // not shown in GUI
         var x: Int = Config.x.get()
         var y: Int = Config.y.get()
         var chatWidth: Int = Config.width.get()
@@ -35,84 +41,43 @@ class ConfigChatSettingsGui(private val lastScreen: Screen?) : Screen(Component.
                 field = height
                 ChatManager.selectedTab.rescaleChat()
             }
-        val scale: OptionInstance<Double> = OptionInstance(
-            "chatPlus.chatSettings.chatTextSize",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.chatTextSize.tooltip")),
-            { component: Component, value: Double ->
-                if (value == 0.0) {
-                    CommonComponents.optionStatus(component, false)
-                } else {
-                    percentValueLabel(component, value)
-                }
-            },
-            OptionInstance.UnitDouble.INSTANCE,
-            Config.scale.get(),
-            {
-                rescaleChat = true
-                Config.delayedUpdates[Config.scale] = { Config.scale.set(it) }
-            }
-        )
-        val maxMessages: OptionInstance<Int> = OptionInstance(
-            "chatPlus.chatSettings.maxMessages",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.maxMessages.tooltip")),
-            { component: Component, value: Int ->
-                if (value == 0) {
-                    CommonComponents.optionStatus(component, false)
-                } else {
-                    genericValueLabel(component, value)
-                }
-            },
-            OptionInstance.IntRange(Config.minMaxMessages, Config.maxMaxMessages),
-            Config.maxMessages.get(),
-            { Config.delayedUpdates[Config.maxMessages] = { Config.maxMessages.set(it) } }
-        )
-        val textOpacity = OptionInstance(
-            "chatPlus.chatSettings.textOpacity",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.textOpacity.tooltip")),
-            { component: Component, value: Double -> percentValueLabel(component, value * 0.9 + 0.1) },
-            OptionInstance.UnitDouble.INSTANCE,
-            Config.textOpacity.get(),
-            { Config.delayedUpdates[Config.textOpacity] = { Config.textOpacity.set(it) } }
-        )
-        val backgroundOpacity = OptionInstance(
-            "chatPlus.chatSettings.backgroundOpacity",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.backgroundOpacity.tooltip")),
-            { component: Component, value: Double -> percentValueLabel(component, value) },
-            OptionInstance.UnitDouble.INSTANCE,
-            Config.backgroundOpacity.get(),
-            { Config.delayedUpdates[Config.backgroundOpacity] = { Config.backgroundOpacity.set(it) } }
-        )
-        val lineSpacing = OptionInstance(
-            "chatPlus.chatSettings.lineSpacing",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.lineSpacing.tooltip")),
-            { component: Component, value: Double -> percentValueLabel(component, value) },
-            OptionInstance.UnitDouble.INSTANCE,
-            0.0,
-            { Config.delayedUpdates[Config.lineSpacing] = { Config.lineSpacing.set(it) } }
-        )
-        val chatTimestampMode = OptionInstance(
-            "chatPlus.chatSettings.chatTimestampMode",
-            OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.chatTimestampMode.tooltip")),
-            OptionInstance.forOptionEnum(),
-            OptionInstance.Enum(
-                listOf(*TimestampMode.values()),
-                Codec.INT.xmap(
-                    { pId: Int -> TimestampMode.byId(pId) },
-                    { obj: TimestampMode -> obj.id }
-                )
-            ),
-            TimestampMode.byId(Config.chatTimestampMode.get())
-        ) { Config.delayedUpdates[Config.chatTimestampMode] = { Config.chatTimestampMode.set(it.id) } }
 
         private var rescaleChat = false
 
-        //StringWidget
-        private fun percentValueLabel(component: Component, value: Double): Component {
-            return Component.translatable("options.percent_value", component, (value * 100.0).toInt())
+        fun isEnabled(): Boolean {
+            return ::enabled.isInitialized && enabled.get()
         }
 
-        private fun genericValueLabel(pText: Component, pValue: Int): Component {
-            return Options.genericValueLabel(pText, Component.literal(pValue.toString()))
+        fun bake() {
+            enabled = ConfigUtils.createBooleanOption("chatPlus.chatSettings.toggle", Config.enabled)
+            scale = ConfigUtils.createDoubleOption("chatPlus.chatSettings.chatTextSize", Config.scale, true)
+            maxMessages = ConfigUtils.createIntRangeOption(
+                "chatPlus.chatSettings.maxMessages",
+                Config.minMaxMessages,
+                Config.maxMaxMessages,
+                Config.maxMessages
+            )
+            textOpacity = ConfigUtils.createDoubleMinOption("chatPlus.chatSettings.textOpacity", .1, Config.textOpacity)
+            backgroundOpacity = ConfigUtils.createDoubleOption("chatPlus.chatSettings.backgroundOpacity", Config.backgroundOpacity, false)
+            lineSpacing = ConfigUtils.createDoubleOption("chatPlus.chatSettings.lineSpacing", Config.lineSpacing, false)
+            chatTimestampMode = OptionInstance(
+                "chatPlus.chatSettings.chatTimestampMode",
+                OptionInstance.cachedConstantTooltip(Component.translatable("chatPlus.chatSettings.chatTimestampMode.tooltip")),
+                OptionInstance.forOptionEnum(),
+                OptionInstance.Enum(
+                    listOf(*TimestampMode.values()),
+                    Codec.INT.xmap(
+                        { pId: Int -> TimestampMode.byId(pId) },
+                        { obj: TimestampMode -> obj.id }
+                    )
+                ),
+                TimestampMode.byId(Config.chatTimestampMode.get())
+            ) { Config.delayedUpdates[Config.chatTimestampMode] = { Config.chatTimestampMode.set(it.id) } }
+
+            x = Config.x.get()
+            y = Config.y.get()
+            chatWidth = Config.width.get()
+            chatHeight = Config.height.get()
         }
 
         enum class TimestampMode(private val id: Int, private val key: String, val format: String) : OptionEnum {

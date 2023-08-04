@@ -3,14 +3,14 @@ package com.ebicep.chatplus.config
 import com.ebicep.chatplus.ChatPlus
 import com.ebicep.chatplus.hud.ChatManager
 import com.ebicep.chatplus.hud.ChatTab
-import config.ConfigHelper
-import hud.ChatTabRecord
+import com.ebicep.chatplus.hud.ChatTabRecord
 import net.minecraftforge.common.ForgeConfigSpec
 import kotlin.concurrent.fixedRateTimer
 
 object Config {
 
     val GENERAL_SPEC: ForgeConfigSpec
+
     lateinit var enabled: ForgeConfigSpec.BooleanValue
     lateinit var x: ForgeConfigSpec.ConfigValue<Int>
     lateinit var y: ForgeConfigSpec.ConfigValue<Int>
@@ -34,7 +34,6 @@ object Config {
         val builder = ForgeConfigSpec.Builder()
         setupConfig(builder)
         GENERAL_SPEC = builder.build()
-        //ChatPlus.LOGGER.info("Initialized config.")
         fixedRateTimer(period = 10 * 1000) {
             delayedUpdates.forEach { it.value() }
             delayedUpdates.clear()
@@ -42,10 +41,14 @@ object Config {
     }
 
     fun init() {
-        val loadedTabs = chatTabs.get()
-        ChatPlus.LOGGER.info("Trying to load ${loadedTabs.size} tabs.")
-        if (loadedTabs.size >= ConfigTabsGui.MAX_TABS) {
-            chatTabs.set(loadedTabs.subList(0, ConfigTabsGui.MAX_TABS))
+        // general settings
+        ChatPlus.LOGGER.info("Baking general settings.")
+        ConfigChatSettingsGui.bake()
+        // tabs
+        val tabsToLoad = chatTabs.get()
+        ChatPlus.LOGGER.info("Trying to load ${tabsToLoad.size} tabs.")
+        if (tabsToLoad.size >= ConfigTabsGui.MAX_TABS) {
+            chatTabs.set(tabsToLoad.subList(0, ConfigTabsGui.MAX_TABS))
         }
 
         val tabs = chatTabs.get()
@@ -83,6 +86,5 @@ object Config {
         ChatManager.chatTabs.forEach { mutableList.add(ChatTabRecord(it.name, it.pattern)) }
         delayedUpdates[chatTabs] = { chatTabs.set(mutableList) }
     }
-
 
 }
