@@ -65,14 +65,14 @@ object ForgeEvents {
                             1
                         })
             )
-            .then(
-                LiteralArgumentBuilder.literal<CommandSourceStack?>("test")
-                    .executes {
-                        //https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=hello%this%is%a%test%message
-                        StringBuilder()
-                        1
-                    }
-            )
+//            .then(
+//                LiteralArgumentBuilder.literal<CommandSourceStack?>("test")
+//                    .executes {
+//                        //https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=hello%this%is%a%test%message
+//                        StringBuilder()
+//                        1
+//                    }
+//            )
             .executes {
                 Minecraft.getInstance().setScreen(ConfigGui(null))
                 1
